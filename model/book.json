@@ -1,0 +1,12 @@
+{
+    "_id": 1,
+    "name": "佛本是道",
+    "source": "http://www.qidian.com/1111.aspx",
+    "source_name": "起点中文网",
+    "desc": "不以少论多, 不以多论少",
+    "author": "梦入神机",
+    "homes": {
+        "qdhome": "http://www.qidian.com/1111.aspx",
+        "lu5home": "http://www.lu5.com/1111.html"
+    }
+}
