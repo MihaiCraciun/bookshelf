@@ -55,7 +55,7 @@ class QDSpider(Spider):
         for bn in book_nodes:
             u_time = self.year[:2] + bn.xpath('div[@class="swe"]/child::text()').extract()[0] + ":00"
             if u_time >= self.last_crawl_time:
-                source = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/@href').extract()[0]  # first link
+                source = self.domain + bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/@href').extract()[0]  # first link
 
                 name = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/child::text()').extract()[0]  # book name
                 author = bn.xpath('div[@class="swd"]/a/child::text()').extract()[0]
@@ -78,7 +78,7 @@ class QDSpider(Spider):
                 yield Request(next_page, callback=self.parse)
         else:
             self.log(message = 'spider sleep wait for next round.', level = log.INFO)
-            next_crawl_time = time_2_str()
+            next_crawl_time = time_2_str(time = datetime.datetime.now() - datetime.timedelta(minutes=every_crawl_timedelta_mins))
             self.conf.set('main', 'last_crawl_time', next_crawl_time)
             self.conf.write(open(os.path.dirname(os.path.realpath(__file__)) + "/cfgs/qd.cfg", 'w'))
             time.sleep(source_spider_sleep)

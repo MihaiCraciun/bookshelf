@@ -9,7 +9,7 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 from bookshelf.items import Book, BookDesc, Sections
 from bookshelf.settings import mongo_host, mongo_port, search_spider_queues, \
     redis_sep, qd_home_spider, spider_redis_queues, redis_def_db, redis_host, \
-    redis_port, unupdate_retry_queue
+    redis_port, unupdate_retry_queue, crawling_key_prefix
 import pymongo
 import traceback
 from scrapy import log
@@ -113,6 +113,7 @@ class BookShelfPipeline(object):
                     self.rconn.hset(unupdate_retry_queue, b_id + redis_sep + source + redis_sep + item['spider'], time_2_str())
                 else:
                     db.sections.insert(sec_in_docs)
+                self.rconn.delete(crawling_key_prefix + b_id + redis_sep + source)
             else:
                 return item
         except:

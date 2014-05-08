@@ -47,6 +47,8 @@ search_spider_queues = {
                         'qdhome' : '__qd_sea_queue',
                         }
 unupdate_retry_queue = '__unupdate_retry_queue'
+crawling_key_prefix = '__crawling_'
+crawling_key_expire = 3 * 60 # this must less than source_spider_sleep
 
 mongo_host = '127.0.0.1'
 mongo_port = 27017

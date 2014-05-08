@@ -3,11 +3,13 @@
 # @author: binge
 
 import sys
+import redis
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 from scrapy.spider import Spider
-from bookshelf.settings import spider_redis_queues, redis_sep
+from bookshelf.settings import spider_redis_queues, redis_sep, redis_def_db,\
+    redis_host, redis_port, crawling_key_prefix, crawling_key_expire
 import time
 from scrapy.http.request import Request
 from scrapy.selector import Selector
@@ -27,21 +29,23 @@ class QDHomeSpider(Spider):
         self.source_book_id_reg = '([0-9]+)'
         self.source_zh_name = u'起点中文网'
         self.source_short_name = 'qd'
+        self.rconn = redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
 
     def parse(self, response):
         while 1:
             info = self.rconn.lpop(spider_redis_queues[self.name])
             if info:  # get a info from redis queue
-                _id = info.split(redis_sep)[0]
+                crawling_key = crawling_key_prefix + info
+                if self.rconn.exists(crawling_key):
+                    continue
+                self.rconn.setex(crawling_key, '1', crawling_key_expire)
                 home_url = info.split(redis_sep)[1]
-                yield Request(home_url, meta = {'_id' : _id, 'url' : home_url}, callback=self.home_parse)
-                break
-            else:
+                yield Request(home_url, meta = {'info' : info}, callback=self.home_parse)
                 time.sleep(1)
 
     def home_parse(self, response):
-        url = response.meta['url']
-        _id = response.meta['_id']
+        url = response._get_url()
+        _id = response.meta['info'].split(redis_sep)[0]
         hxs = Selector(response)
         desc = base64.encodestring(hxs.xpath('//span[@itemprop="description"]/child').extract()[0])
         bc = BookDesc()
@@ -51,7 +55,7 @@ class QDHomeSpider(Spider):
 
         source_book_id = re.search(self.source_book_id_reg, url)
         directory_url = self.directory_pattern % source_book_id
-        yield Request(directory_url, meta={'_id' : _id, 'source' : url}, callback=self.directory_parse)
+        yield Request(directory_url, meta=response.meta, callback=self.directory_parse)
 
     def directory_parse(self, response):
         hxs = Selector(response)
@@ -59,8 +63,9 @@ class QDHomeSpider(Spider):
         item = Sections()
         item['source_short_name'] = self.source_short_name
         item['source_zh_name'] = self.source_zh_name
-        item['b_id'] = response.meta['_id']
-        item['source'] = response.meta['source']
+        info = response.meta['info']
+        item['b_id'] = info.split(redis_sep)[0]
+        item['source'] = info.split(redis_sep)[1]
         item['spider'] = self.name
         secs = OrderedDict()
         for sn in sec_nodes:

@@ -2,4 +2,5 @@ eclipse.preferences.version=1
 encoding//bookshelf/spiders/qidian.py=utf-8
 encoding//bookshelf/spiders/qidian_home.py=utf-8
 encoding//bookshelf/utils.py=utf-8
+encoding//test/count_aa.py=utf-8
 encoding//test/order_dict.py=utf-8
