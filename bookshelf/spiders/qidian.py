@@ -13,7 +13,6 @@ import datetime
 from bookshelf.settings import qd_home_spider, \
     source_spider_sleep, every_crawl_timedelta_mins
 
-from bookshelf.utils import time_2_str
 from scrapy.http.request import Request
 import os
 import time
