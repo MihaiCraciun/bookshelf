@@ -9,7 +9,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-BOT_NAME = 'bookshelf'
+BOT_NAME = 'Baiduspider'
 
 SPIDER_MODULES = ['bookshelf.spiders']
 NEWSPIDER_MODULE = 'bookshelf.spiders'
@@ -39,7 +39,7 @@ DEFAULT_REQUEST_HEADERS = {
 MEMDEBUG_NOTIFY = ['zhiying8710@hotmail.com']
 ROBOTSTXT_OBEY = False
 
-every_crawl_timedelta_mins = 5
+every_crawl_timedelta_mins = 3
 source_spider_sleep = 60 * 10
 
 #config
@@ -62,4 +62,3 @@ redis_sep = ':::'
 
 qd_home_spider = 'qdhome'
 
-test_data_file = "e:/work/bookshelf/data/%s.txt"

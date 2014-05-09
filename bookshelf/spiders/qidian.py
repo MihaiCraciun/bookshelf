@@ -41,7 +41,9 @@ class QDSpider(Spider):
             self.last_crawl_time = '%s-%s-%s 00:00:00' % (self.year, self.month, self.day)
         else:
             self.last_crawl_time = last_crawl_time_str
-        next_crawl_time = time_2_str(now - datetime.timedelta(minutes=every_crawl_timedelta_mins))
+        self.gene_next_crawl_time = lambda (t) : (str(t.year) + '-' + str(t.month) + '-' + str(t.day) + ' ' + t.strftime('%X'))
+        next_crawl_time = self.gene_next_crawl_time(now - datetime.timedelta(minutes=every_crawl_timedelta_mins))
+#         next_crawl_time = time_2_str(now - datetime.timedelta(minutes=every_crawl_timedelta_mins))
         self.conf.set('main', 'last_crawl_time', next_crawl_time)
         self.conf.write(open(os.path.dirname(os.path.realpath(__file__)) + "/cfgs/qd.cfg", 'w'))
 
@@ -78,7 +80,8 @@ class QDSpider(Spider):
                 yield Request(next_page, callback=self.parse)
         else:
             self.log(message = 'spider sleep wait for next round.', level = log.INFO)
-            next_crawl_time = time_2_str(time = datetime.datetime.now() - datetime.timedelta(minutes=every_crawl_timedelta_mins))
+#             next_crawl_time = time_2_str(time = datetime.datetime.now() - datetime.timedelta(minutes=every_crawl_timedelta_mins))
+            next_crawl_time = self.gene_next_crawl_time(datetime.datetime.now() - datetime.timedelta(minutes=every_crawl_timedelta_mins))
             self.conf.set('main', 'last_crawl_time', next_crawl_time)
             self.conf.write(open(os.path.dirname(os.path.realpath(__file__)) + "/cfgs/qd.cfg", 'w'))
             time.sleep(source_spider_sleep)
