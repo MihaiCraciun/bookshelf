@@ -23,7 +23,7 @@ class QDHomeSpider(Spider):
 
     name = 'qdhome'
 
-    def __init__(self, i):
+    def __init__(self, **kwargs):
         self.start_urls = ['http://www.qidian.com']
         self.directory_pattern = 'http://read.qidian.com/BookReader/%s.aspx'
         self.source_book_id_reg = '([0-9]+)'
@@ -74,6 +74,8 @@ class QDHomeSpider(Spider):
             secs[url] = name
         yield item
 
+    def __str__(self):
+        return self.name
 
 
 
