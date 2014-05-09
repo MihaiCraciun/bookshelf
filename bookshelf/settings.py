@@ -19,6 +19,9 @@ ITEM_PIPELINES = {
 DOWNLOAD_TIMEOUT = 30
 CONCURRENT_REQUESTS = 128
 
+DUPEFILTER_DEBUG = True
+DUPEFILTER_CLASS = 'bookshelf.dupefilters.UnFilterDupeFilter'
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.79 Safari/535.11'
 DEFAULT_REQUEST_HEADERS = {

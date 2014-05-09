@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
+encoding//bookshelf/dupefilters.py=utf-8
 encoding//bookshelf/spiders/qidian.py=utf-8
 encoding//bookshelf/spiders/qidian_home.py=utf-8
 encoding//bookshelf/utils.py=utf-8
