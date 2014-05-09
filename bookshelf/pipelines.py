@@ -169,5 +169,6 @@ class DropPipeline(object):
     '''
 
     def process_item(self, item, spider):
-        return DropItem('this item(' + str(item) + ') is not instance of any Item.')
+        if item:
+            raise DropItem('this item(%s) is not instance of any Item.' % str(item))
 
