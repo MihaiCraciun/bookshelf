@@ -14,7 +14,10 @@ BOT_NAME = 'bookshelf'
 SPIDER_MODULES = ['bookshelf.spiders']
 NEWSPIDER_MODULE = 'bookshelf.spiders'
 ITEM_PIPELINES = {
-    'bookshelf.pipelines.BookShelfPipeline' : 500
+    'bookshelf.pipelines.BookPipeline' : 500,
+    'bookshelf.pipelines.BookDescPipeline' : 501,
+    'bookshelf.pipelines.SectionsPipeline' : 502,
+    'bookshelf.pipelines.DropPipeline' : 503
 }
 DOWNLOAD_TIMEOUT = 30
 CONCURRENT_REQUESTS = 128
