@@ -1,3 +1,10 @@
 test
 *.pyc
 bookshelf/spiders/cfgs/qd.cfg
+build
+dbs
+eggs
+items
+logs
+project.egg-info
+setup.py

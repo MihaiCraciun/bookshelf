@@ -1,3 +1,4 @@
 scrapy: 0.22
 pymongo: 2.7
 redis: 2.9.1
+srapyd: 1.01

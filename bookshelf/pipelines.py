@@ -3,6 +3,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import sys
+from scrapy.exceptions import DropItem
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
@@ -22,18 +23,21 @@ try:
 except ImportError:
     from md5 import md5
 
-class BookShelfPipeline(object):
-
-    def __init__(self):
-        self.rconn = redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
+class BookPipeline(object):
+    '''
+    exec book item.
+    '''
 
     def process_item(self, item, spider):
-        mongo = None
-        try:
-            # conn mongodb
-            mongo = pymongo.Connection(mongo_host, mongo_port)
-            db = mongo.bookshelf
-            if item.__class__ is Book:  # exec Book item.
+        if not item.__class__ is Book:
+            return item
+        else:
+            rconn = redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
+            mongo = None
+            try:
+                # conn mongodb
+                mongo = pymongo.Connection(mongo_host, mongo_port)
+                db = mongo.bookshelf
                 source = item['source']
                 _id = md5(source).hexdigest()  # gene _id
                 book = db.books.find_one({'_id' : _id})
@@ -50,24 +54,63 @@ class BookShelfPipeline(object):
                     # this book must be searched in other update sites.
                     for sea in search_spider_queues:
                         if not sea == item['source_spider']:
-                            self.rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
-                    self.rconn.rpush(spider_redis_queues[item['source_spider']], _id + redis_sep + source)
+                            rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
+                    rconn.rpush(spider_redis_queues[item['source_spider']], _id + redis_sep + source)
                 else:  # this book has been crawled once or more.
                     book_homes = book['homes']
                     for sea in search_spider_queues:
                         if (not sea == item['source_spider']):  # if this book has some update sites not crawled yet, search it.
                             if (not sea in book_homes):
-                                self.rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
+                                rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
                         if sea in book_homes:  # get all home url to crawl.
                             home_url = book_homes[sea]
                             if home_url:
-                                self.rconn.rpush(spider_redis_queues[sea], _id + redis_sep + home_url)
+                                rconn.rpush(spider_redis_queues[sea], _id + redis_sep + home_url)
 
                 # push curr home link to qidian home spider queue, then the home spider will take the responsibility.
-                self.rconn.rpush(spider_redis_queues[qd_home_spider], _id + redis_sep + item['source'])
-            elif item.__class__ is BookDesc:
-                db.books.update({"_id" : _id}, {'$set' : {"desc":item['desc']}});
-            elif item.__class__ is Sections:
+                rconn.rpush(spider_redis_queues[qd_home_spider], _id + redis_sep + item['source'])
+            except:
+                log.msg(message=traceback.format_exc(), _level=log.ERROR)
+            finally:
+                if mongo:
+                    mongo.close()
+
+class BookDescPipeline(object):
+    '''
+    exec book description item.
+    '''
+
+    def process_item(self, item, spider):
+        if not item.__class__ is BookDesc:
+            return item
+        else:
+            mongo = None
+            try:
+                # conn mongodb
+                mongo = pymongo.Connection(mongo_host, mongo_port)
+                db = mongo.bookshelf
+                db.books.update({"_id" : item['_id']}, {'$set' : {"desc":item['desc']}})
+            except:
+                log.msg(message=traceback.format_exc(), _level=log.ERROR)
+            finally:
+                if mongo:
+                    mongo.close()
+
+class SectionsPipeline(object):
+    '''
+    exec sections item.
+    '''
+
+    def process_item(self, item, spider):
+        if not item.__class__ is Sections:
+            return item
+        else:
+            rconn = redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
+            mongo = None
+            try:
+                # conn mongodb
+                mongo = pymongo.Connection(mongo_host, mongo_port)
+                db = mongo.bookshelf
                 book = db.books.find_one({'_id' : item['b_id']})
                 source = item['source']
                 is_source = False
@@ -75,7 +118,7 @@ class BookShelfPipeline(object):
                     is_source = True
                 b_id = item['b_id']
                 source_short_name = item['source_short_name']
-                sec_docs = db.sections.find({'b_id' : b_id, 'source_short_name' : source_short_name})
+                sec_docs = db.sections.find({'b_id' : b_id, 'source_short_name' : source_short_name}, {'url' : 1})
                 sec_raws = item['secs']
                 sec_in_docs = []
                 n = datetime.datetime.now()
@@ -110,14 +153,20 @@ class BookShelfPipeline(object):
                         sec_in_docs.append(sec)
                         i += 1
                 if not sec_in_docs and not is_source: # current executing a update site, no doc to update, push info back to redis and retry.
-                    self.rconn.hset(unupdate_retry_queue, b_id + redis_sep + source + redis_sep + item['spider'], time_2_str())
+                    rconn.hset(unupdate_retry_queue, b_id + redis_sep + source + redis_sep + item['spider'], time_2_str())
                 else:
                     db.sections.insert(sec_in_docs)
-                self.rconn.delete(crawling_key_prefix + b_id + redis_sep + source)
-            else:
-                return item
-        except:
-            log.msg(message=traceback.format_exc(), _level=log.ERROR)
-        finally:
-            if mongo:
-                mongo.close()
+                rconn.delete(crawling_key_prefix + b_id + redis_sep + source)
+            except:
+                log.msg(message=traceback.format_exc(), _level=log.ERROR)
+            finally:
+                if mongo:
+                    mongo.close()
+
+class DropPipeline(object):
+    '''
+    if any item is transferred in this pipeline, drop it.
+    '''
+
+    def process_item(self, item, spider):
+        return DropItem('this item(' + str(item) + ') is not instance of any Item.')

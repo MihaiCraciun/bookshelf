@@ -9,7 +9,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-BOT_NAME = 'Baiduspider'
+BOT_NAME = 'bookshelf'
 
 SPIDER_MODULES = ['bookshelf.spiders']
 NEWSPIDER_MODULE = 'bookshelf.spiders'
