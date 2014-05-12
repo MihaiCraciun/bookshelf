@@ -11,7 +11,11 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 BOT_NAME = 'bookshelf'
 
-SPIDER_MODULES = ['bookshelf.spiders']
+SPIDER_MODULES = [
+                  'bookshelf.spiders.source',
+                  'bookshelf.spiders.home',
+                  'bookshelf.spiders.search'
+                  ]
 NEWSPIDER_MODULE = 'bookshelf.spiders'
 ITEM_PIPELINES = {
     'bookshelf.pipelines.BookPipeline' : 500,
