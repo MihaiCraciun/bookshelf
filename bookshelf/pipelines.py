@@ -8,15 +8,13 @@ reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 from bookshelf.items import Book, BookDesc, Sections
-from bookshelf.settings import mongo_host, mongo_port, search_spider_queues, \
-    redis_sep, qd_home_spider, spider_redis_queues, redis_def_db, redis_host, \
-    redis_port, unupdate_retry_queue, crawling_key_prefix
-import pymongo
+from bookshelf.settings import search_spider_queues, \
+    redis_sep, qd_home_spider, spider_redis_queues, unupdate_retry_queue
 import traceback
 from scrapy import log
-import redis
 import datetime
-from bookshelf.utils import time_2_str
+from bookshelf.utils import time_2_str, del_crawling_home, get_redis_conn,\
+    get_mongo, close_mongo, close_redis_conn
 # import md5
 try:
     from hashlib import md5
@@ -32,11 +30,12 @@ class BookPipeline(object):
         if not item.__class__ is Book:
             return item
         else:
-            rconn = redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
+            rconn = None
             mongo = None
             try:
+                rconn = get_redis_conn()
                 # conn mongodb
-                mongo = pymongo.Connection(mongo_host, mongo_port)
+                mongo = get_mongo()
                 db = mongo.bookshelf
                 source = item['source']
                 _id = md5(source).hexdigest()  # gene _id
@@ -72,8 +71,8 @@ class BookPipeline(object):
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
-                if mongo:
-                    mongo.close()
+                close_mongo(mongo)
+                close_redis_conn(rconn)
 
 class BookDescPipeline(object):
     '''
@@ -87,14 +86,13 @@ class BookDescPipeline(object):
             mongo = None
             try:
                 # conn mongodb
-                mongo = pymongo.Connection(mongo_host, mongo_port)
+                mongo = get_mongo()
                 db = mongo.bookshelf
                 db.books.update({"_id" : item['_id']}, {'$set' : {"desc":item['desc']}})
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
-                if mongo:
-                    mongo.close()
+                close_mongo(mongo)
 
 class SectionsPipeline(object):
     '''
@@ -105,11 +103,12 @@ class SectionsPipeline(object):
         if not item.__class__ is Sections:
             return item
         else:
-            rconn = redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
+            rconn = None
             mongo = None
             try:
+                rconn = get_redis_conn()
                 # conn mongodb
-                mongo = pymongo.Connection(mongo_host, mongo_port)
+                mongo = get_mongo()
                 db = mongo.bookshelf
                 book = db.books.find_one({'_id' : item['b_id']})
                 source = item['source']
@@ -156,12 +155,12 @@ class SectionsPipeline(object):
                     rconn.hset(unupdate_retry_queue, b_id + redis_sep + source + redis_sep + item['spider'], time_2_str())
                 else:
                     db.sections.insert(sec_in_docs)
-                rconn.delete(crawling_key_prefix + b_id + redis_sep + source)
+                del_crawling_home(b_id + redis_sep + source)
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
-                if mongo:
-                    mongo.close()
+                close_mongo(mongo)
+                close_redis_conn(rconn)
 
 class DropPipeline(object):
     '''

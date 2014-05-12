@@ -3,13 +3,12 @@
 # @author: binge
 
 import sys
-import redis
+from bookshelf.utils import exists_crawling_home, set_crawling_home
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 from scrapy.spider import Spider
-from bookshelf.settings import spider_redis_queues, redis_sep, redis_def_db,\
-    redis_host, redis_port, crawling_key_prefix, crawling_key_expire
+from bookshelf.settings import spider_redis_queues, redis_sep
 import time
 from scrapy.http.request import Request
 from scrapy.selector import Selector
@@ -29,16 +28,14 @@ class QDHomeSpider(Spider):
         self.source_book_id_reg = '([0-9]+)'
         self.source_zh_name = u'起点中文网'
         self.source_short_name = 'qd'
-        self.rconn = redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
 
     def parse(self, response):
         while 1:
             info = self.rconn.lpop(spider_redis_queues[self.name])
             if info:  # get a info from redis queue
-                crawling_key = crawling_key_prefix + info
-                if self.rconn.exists(crawling_key):
+                if exists_crawling_home(info):
                     continue
-                self.rconn.setex(crawling_key, '1', crawling_key_expire)
+                set_crawling_home(info)
                 home_url = info.split(redis_sep)[1]
                 yield Request(home_url, meta = {'info' : info}, callback=self.home_parse)
                 time.sleep(1)
