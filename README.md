@@ -4,16 +4,12 @@
 
 
 ## Usage
-±¾³ÌĞòÓÉpythonÓïÑÔ±àĞ´.
-1. °²×°scrapy, redisµÄ·şÎñÆ÷¶ËÓëpython¿Í»§¶Ë(redisÄ£¿é), mongodbµÄ·şÎñ¶ËÓëpython¿Í»§¶Ë(pymongoÄ£¿é)
-2. Æô¶¯ËùÓĞÅÀ³æ:
-	ÅÀ³æÓĞ: qd(ÆğµãÖĞÎÄÍøÊ×Ò³)
-					qd_home(ÆğµãÖĞÎÄÍøµÄĞ¡ËµµÄÖ÷Ò³)
-	Æô¶¯ÃüÁî(ÒÔqdÎªÀı): scrapy crawl qd
-3. scrapyd¼à¿Ø
-	 scrapydÊÇscrapyµÄ¼à¿Ø¹¤¾ß(http://scrapyd.readthedocs.org/)
-	 °²×°: easy_install scrapyd
-	 		
+æœ¬ç¨‹åºç”±pythonè¯­è¨€ç¼–å†™.
+    1. å®‰è£…scrapy, redisçš„æœåŠ¡å™¨ç«¯ä¸pythonå®¢æˆ·ç«¯(redisæ¨¡å—), mongodbçš„æœåŠ¡ç«¯ä¸pythonå®¢æˆ·ç«¯(pymongoæ¨¡å—)
+    2. å¯åŠ¨æ‰€æœ‰çˆ¬è™«: çˆ¬è™«æœ‰: qd(èµ·ç‚¹ä¸­æ–‡ç½‘é¦–é¡µ) qdhome(èµ·ç‚¹ä¸­æ–‡ç½‘çš„å°è¯´çš„ä¸»é¡µ) å¯åŠ¨å‘½ä»¤(ä»¥qdä¸ºä¾‹): scrapy crawl qd
+    3. scrapydç›‘æ§ scrapydæ˜¯scrapyçš„ç›‘æ§å·¥å…·(http://scrapyd.readthedocs.org/)
+                         å®‰è£…: easy_install scrapyd
+
 
 
 ## Developing
@@ -23,6 +19,6 @@
 ### Tools
 
 Created with [Nodeclipse](https://github.com/Nodeclipse/nodeclipse-1)
- ([Eclipse Marketplace](http://marketplace.eclipse.org/content/nodeclipse), [site](http://www.nodeclipse.org))   
+ ([Eclipse Marketplace](http://marketplace.eclipse.org/content/nodeclipse), [site](http://www.nodeclipse.org))
 
 Nodeclipse is free open-source project that grows with your contributions.

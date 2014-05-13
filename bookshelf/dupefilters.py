@@ -3,10 +3,10 @@
 # @author: binge
 
 import sys
-import time
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
+import time
 from scrapy.dupefilter import RFPDupeFilter
 # import md5
 try:

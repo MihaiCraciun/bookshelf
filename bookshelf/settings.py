@@ -47,19 +47,28 @@ MEMDEBUG_NOTIFY = ['zhiying8710@hotmail.com']
 ROBOTSTXT_OBEY = False
 
 every_crawl_timedelta_mins = 3
-source_spider_sleep = 60 * 10
+source_spider_sleep_secs = 60 * 10
 
 #config
+ingrone_spiders = set(['qdhome', 'zhhome', 'cshome'])
+source_home_spiders = {
+                       'qd' : 'qdhome',
+                       'zh' : 'zhhome',
+                       'cs' : 'cshome'
+                       }
 spider_redis_queues = {
-                       'qdhome' : '__qidian_home_queue'
+                       'qdhome' : '__qidian_home_queue',
+                       'zhhome' : '__zongheng_home_queue',
+                       'cshome' : '__chuangshi_home_queue'
                        }
 search_spider_queues = {
                         'qdhome' : '__qd_sea_queue',
+                        'zhhome' : '__zh_sea_queue'
                         }
 unupdate_retry_queue = '__unupdate_retry_queue'
 crawling_key_prefix = '__crawling_'
 crawling_key_expire = 3 * 60 # this must less than source_spider_sleep
-last_crawl_time_prefix = '__last_crawl_time_'
+last_crawl_time_key = '__last_crawl_time'
 
 mongo_host = '127.0.0.1'
 mongo_port = 27017
@@ -68,5 +77,4 @@ redis_port = 6379
 redis_def_db = 0
 redis_sep = ':::'
 
-qd_home_spider = 'qdhome'
 

@@ -3,18 +3,19 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import sys
-from scrapy.exceptions import DropItem
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
+from bookshelf.utils.conns_helper import get_redis_conn, get_mongo, close_mongo,\
+    close_redis_conn, del_crawling_home
+from bookshelf.utils.common import time_2_str
+from scrapy.exceptions import DropItem
 from bookshelf.items import Book, BookDesc, Sections
 from bookshelf.settings import search_spider_queues, \
-    redis_sep, qd_home_spider, spider_redis_queues, unupdate_retry_queue
+    redis_sep, spider_redis_queues, unupdate_retry_queue, ingrone_spiders
 import traceback
 from scrapy import log
 import datetime
-from bookshelf.utils import time_2_str, del_crawling_home, get_redis_conn,\
-    get_mongo, close_mongo, close_redis_conn
 # import md5
 try:
     from hashlib import md5
@@ -52,22 +53,20 @@ class BookPipeline(object):
                     db.books.insert(b)  # insert it to mongodb
                     # this book must be searched in other update sites.
                     for sea in search_spider_queues:
-                        if not sea == item['source_spider']:
+                        if not sea in ingrone_spiders:
                             rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
-                    rconn.rpush(spider_redis_queues[item['source_spider']], _id + redis_sep + source)
                 else:  # this book has been crawled once or more.
                     book_homes = book['homes']
                     for sea in search_spider_queues:
-                        if (not sea == item['source_spider']):  # if this book has some update sites not crawled yet, search it.
-                            if (not sea in book_homes):
-                                rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
+                        if not sea in ingrone_spiders and (not sea in book_homes):  # if this book has some update sites not crawled yet, search it.
+                            rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
                         if sea in book_homes:  # get all home url to crawl.
                             home_url = book_homes[sea]
                             if home_url:
                                 rconn.rpush(spider_redis_queues[sea], _id + redis_sep + home_url)
 
-                # push curr home link to qidian home spider queue, then the home spider will take the responsibility.
-                rconn.rpush(spider_redis_queues[qd_home_spider], _id + redis_sep + item['source'])
+                # push current home link to its home spider queue, then the home spider will take the responsibility.
+                rconn.rpush(spider_redis_queues[item['source_home_spider']], _id + redis_sep + source)
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
@@ -134,6 +133,7 @@ class SectionsPipeline(object):
                             sec['source_short_name'] = source_short_name
                             sec['source_zh_name'] = item['source_zh_name']
                             sec['url'] = sk
+                            sec['is_source'] = item['is_source']
                             sec['name'] = sec_raws[sk]
                             sec['crawl_time'] = time_2_str(n + datetime.timedelta(seconds=i))
                             sec_in_docs.append(sec)
@@ -147,6 +147,7 @@ class SectionsPipeline(object):
                         sec['source_short_name'] = source_short_name
                         sec['source_zh_name'] = item['source_zh_name']
                         sec['url'] = sr
+                        sec['is_source'] = item['is_source']
                         sec['name'] = sec_raws[sr]
                         sec['crawl_time'] = time_2_str(n + datetime.timedelta(seconds=i))
                         sec_in_docs.append(sec)

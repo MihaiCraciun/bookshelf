@@ -1,15 +1,16 @@
 # encoding: utf-8
-# Created on 2014-5-7
+# Created on 2014-5-13
 # @author: binge
 
 import sys
-import datetime
-from bookshelf.settings import last_crawl_time_prefix, redis_def_db, redis_host,\
-    redis_port, crawling_key_prefix, crawling_key_expire, mongo_host, mongo_port
-import redis
-import pymongo
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
+
+import redis
+from bookshelf.settings import redis_def_db, redis_host, redis_port, mongo_host,\
+    mongo_port, spider_redis_queues, crawling_key_prefix, crawling_key_expire,\
+    redis_sep, last_crawl_time_key
+import pymongo
 
 def get_redis_conn():
     return redis.Redis(host=redis_host, port=redis_port, db=redis_def_db)
@@ -25,23 +26,35 @@ def close_mongo(mongo):
     if mongo:
         mongo.close()
 
-def time_2_str(time = datetime.datetime.now(), frt = '%Y-%m-%d %H:%M:%S'):
-    '''
-        this function parse time obj to str by frt parameter,
-        parameter time is default datetime.datetime.now(),
-        and parameter frt default %Y-%m-%d %H:%M:%S
-    '''
-    return time.strftime(frt)
+def get_info_from_home_queue(spider_name):
+    rconn = None
+    try:
+        rconn = get_redis_conn()
+        info = rconn.lpop(spider_redis_queues[spider_name])
+        crawling_key = crawling_key_prefix + info
+        if rconn.exists(crawling_key):
+            return None
+        rconn.setex(crawling_key, '1', crawling_key_expire)
+        return info, info.split(redis_sep)[1]
+    finally:
+        close_redis_conn(rconn)
+
+def pop_home_crawl_info(spider_name):
+    rconn = None
+    try:
+        rconn = get_redis_conn()
+        return rconn.lpop(spider_redis_queues[spider_name])
+    finally:
+        close_redis_conn(rconn)
 
 def get_last_crawl_time(spider_name):
     '''
         get spider(which named by parameter spider_name) the last crawled time.
     '''
-    key = last_crawl_time_prefix + spider_name
     rconn = None
     try:
         rconn = get_redis_conn()
-        return rconn.get(key)
+        return rconn.hget(last_crawl_time_key, spider_name)
     finally:
         close_redis_conn(rconn)
 
@@ -49,11 +62,10 @@ def set_next_crawl_time(spider_name, time):
     '''
         set spider(which named by parameter spider_name) the next crawl time.
     '''
-    key = last_crawl_time_prefix + spider_name
     rconn = None
     try:
         rconn = get_redis_conn()
-        rconn.set(key, time)
+        rconn.hset(last_crawl_time_key, spider_name, time)
     finally:
         close_redis_conn(rconn)
 
@@ -92,3 +104,4 @@ def del_crawling_home(crawl_info):
         rconn.delete(crawling_key)
     finally:
         close_redis_conn(rconn)
+
