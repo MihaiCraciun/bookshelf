@@ -56,6 +56,8 @@ class BookPipeline(object):
                     for sea in search_spider_queues:
                         if not sea in ingrone_spiders:
                             rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
+                    # push current home link to its home spider queue, then the home spider will take the responsibility.
+                    rconn.rpush(spider_redis_queues[item['source_home_spider']], _id + redis_sep + source)
                 else:  # this book has been crawled once or more.
                     book_homes = book['homes']
                     for sea in search_spider_queues:
@@ -66,8 +68,6 @@ class BookPipeline(object):
                             if home_url:
                                 rconn.rpush(spider_redis_queues[sea], _id + redis_sep + home_url)
 
-                # push current home link to its home spider queue, then the home spider will take the responsibility.
-                rconn.rpush(spider_redis_queues[item['source_home_spider']], _id + redis_sep + source)
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
