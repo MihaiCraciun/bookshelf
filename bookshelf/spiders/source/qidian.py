@@ -6,10 +6,10 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.conns_helper import get_last_crawl_time,\
+from bookshelf.utils.conns_helper import get_last_crawl_time, \
     set_next_crawl_time
 from bookshelf.utils.item_helper import gene_book_item
-from bookshelf.utils.common import source_spider_sleep, get_source_home_spider,\
+from bookshelf.utils.common import source_spider_sleep, get_source_home_spider, \
     get_every_crawl_timedelta_mins
 import datetime
 
@@ -50,7 +50,7 @@ class QDSpider(Spider):
         hxs = Selector(response)
         book_nodes = hxs.xpath('//div[@class="sw1"] | //div[@class="sw2"]')
         if not book_nodes:
-            self.log(message='%s spider get nothing in home page, current url is %s' %(self.name, response._get_url()), level=log.WARNING)
+            self.log(message='%s spider get nothing in home page, current url is %s' % (self.name, response._get_url()), level=log.WARNING)
             is_continue = False
         else:
             for bn in book_nodes:
@@ -72,7 +72,7 @@ class QDSpider(Spider):
             else:
                 self.log(message='%s spider cannot get next page, current url is %s' % (self.name, response._get_url()), level=log.WARNING)
         else:
-            self.log(message = '%s spider sleep wait for next round.' % self.name, level = log.INFO)
+            self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
             self.last_crawl_time = get_last_crawl_time(self.name)
             next_crawl_time = self.gene_next_crawl_time(datetime.datetime.now() - datetime.timedelta(minutes=get_every_crawl_timedelta_mins()))
             set_next_crawl_time(self.name, next_crawl_time)

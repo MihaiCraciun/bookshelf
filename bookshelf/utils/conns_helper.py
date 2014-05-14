@@ -7,8 +7,8 @@ reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import redis
-from bookshelf.settings import redis_def_db, redis_host, redis_port, mongo_host,\
-    mongo_port, spider_redis_queues, crawling_key_prefix, crawling_key_expire,\
+from bookshelf.settings import redis_def_db, redis_host, redis_port, mongo_host, \
+    mongo_port, spider_redis_queues, crawling_key_prefix, crawling_key_expire, \
     redis_sep, last_crawl_time_key
 import pymongo
 

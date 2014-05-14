@@ -34,3 +34,14 @@ def gene_sections_item(source_short_name, source_zh_name, b_id, source, spider, 
     item['secs'] = secs
     item['is_source'] = is_source
     return item
+
+def sections_2_doc(b_id, source_short_name, source_zh_name, url, is_source, name, crawl_time):
+    return {
+            'b_id' : b_id,
+            'source_short_name' : source_short_name,
+            'source_zh_name' : source_zh_name,
+            'url' : url,
+            'is_source' : is_source,
+            'name' : name,
+            'crawl_time' : crawl_time
+            }

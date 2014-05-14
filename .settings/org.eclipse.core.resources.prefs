@@ -1,5 +1,6 @@
 eclipse.preferences.version=1
 encoding//bookshelf/dupefilters.py=utf-8
+encoding//bookshelf/spiders/home/chuangshi_home.py=utf-8
 encoding//bookshelf/spiders/home/qidian_home.py=utf-8
 encoding//bookshelf/spiders/home/zongheng_home.py=utf-8
 encoding//bookshelf/spiders/source/chuangshi.py=utf-8

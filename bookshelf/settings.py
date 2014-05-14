@@ -49,7 +49,7 @@ ROBOTSTXT_OBEY = False
 every_crawl_timedelta_mins = 3
 source_spider_sleep_secs = 60 * 10
 
-#config
+# config
 ingrone_spiders = set(['qdhome', 'zhhome', 'cshome'])
 source_home_spiders = {
                        'qd' : 'qdhome',
@@ -67,8 +67,10 @@ search_spider_queues = {
                         }
 unupdate_retry_queue = '__unupdate_retry_queue'
 crawling_key_prefix = '__crawling_'
-crawling_key_expire = 3 * 60 # this must less than source_spider_sleep
+crawling_key_expire = 3 * 60  # this must less than source_spider_sleep
 last_crawl_time_key = '__last_crawl_time'
+
+user_favos_update_counts_key_prefix = '__user_favos_update_counts_'
 
 mongo_host = '127.0.0.1'
 mongo_port = 27017

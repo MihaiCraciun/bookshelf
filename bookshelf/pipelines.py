@@ -6,13 +6,15 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.conns_helper import get_redis_conn, get_mongo, close_mongo,\
+from bookshelf.utils.item_helper import sections_2_doc
+from bookshelf.utils.conns_helper import get_redis_conn, get_mongo, close_mongo, \
     close_redis_conn, del_crawling_home
 from bookshelf.utils.common import time_2_str
 from scrapy.exceptions import DropItem
 from bookshelf.items import Book, BookDesc, Sections
 from bookshelf.settings import search_spider_queues, \
-    redis_sep, spider_redis_queues, unupdate_retry_queue, ingrone_spiders
+    redis_sep, spider_redis_queues, unupdate_retry_queue, ingrone_spiders, \
+    user_favos_update_counts_key_prefix
 import traceback
 from scrapy import log
 import datetime
@@ -128,34 +130,25 @@ class SectionsPipeline(object):
                     sr_ks = sec_raws.keys()[::-1]
                     for sk in sr_ks:
                         if not sk in old_urls:
-                            sec = {}
-                            sec['b_id'] = b_id
-                            sec['source_short_name'] = source_short_name
-                            sec['source_zh_name'] = item['source_zh_name']
-                            sec['url'] = sk
-                            sec['is_source'] = item['is_source']
-                            sec['name'] = sec_raws[sk]
-                            sec['crawl_time'] = time_2_str(n + datetime.timedelta(seconds=i))
-                            sec_in_docs.append(sec)
+                            sec_in_docs.append(sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, item['is_source'], sec_raws[sk], time_2_str(n + datetime.timedelta(seconds=i))))
                             i += 1
                         else:
                             break
                 else:
                     for sr in sec_raws:
-                        sec = {}
-                        sec['b_id'] = b_id
-                        sec['source_short_name'] = source_short_name
-                        sec['source_zh_name'] = item['source_zh_name']
-                        sec['url'] = sr
-                        sec['is_source'] = item['is_source']
-                        sec['name'] = sec_raws[sr]
-                        sec['crawl_time'] = time_2_str(n + datetime.timedelta(seconds=i))
-                        sec_in_docs.append(sec)
+                        sec_in_docs.append(sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, item['is_source'], sec_raws[sr], time_2_str(n + datetime.timedelta(seconds=i))))
                         i += 1
-                if not sec_in_docs and not is_source: # current executing a update site, no doc to update, push info back to redis and retry.
+                if not sec_in_docs and not is_source:  # current executing a update site, no doc to update, push info back to redis and retry.
                     rconn.hset(unupdate_retry_queue, b_id + redis_sep + source + redis_sep + item['spider'], time_2_str())
                 else:
                     db.sections.insert(sec_in_docs)
+
+                    user_favo_docs = db.user_favos.find({'b_ids' : b_id}, {'_id' : 1})
+                    if user_favo_docs:  # push update count to users.
+                        update_counts = len(sec_in_docs)
+                        for ufd in user_favo_docs:
+                            rconn.hincrby(user_favos_update_counts_key_prefix + ufd['_id'], b_id, update_counts)
+
                 del_crawling_home(b_id + redis_sep + source)
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
@@ -165,7 +158,7 @@ class SectionsPipeline(object):
 
 class DropPipeline(object):
     '''
-    if any item is transferred in this pipeline, drop it.
+    if any item is transferred to this pipeline, drop it.
     '''
 
     def process_item(self, item, spider):

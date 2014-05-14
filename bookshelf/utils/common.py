@@ -7,7 +7,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import datetime
-from bookshelf.settings import source_spider_sleep_secs, redis_sep,\
+from bookshelf.settings import source_spider_sleep_secs, redis_sep, \
     source_home_spiders, every_crawl_timedelta_mins
 import time
 import lxml.etree;
@@ -22,7 +22,7 @@ delta_time_dict = {
                    'weeks' : lambda t, delta : t + datetime.timedelta(weeks=delta)
                    }
 
-def time_2_str(t = datetime.datetime.now(), frt = '%Y-%m-%d %H:%M:%S', delta=None, delta_unit=None):
+def time_2_str(t=datetime.datetime.now(), frt='%Y-%m-%d %H:%M:%S', delta=None, delta_unit=None):
     '''
         this function parse time obj to str by frt parameter,
         parameter t is default datetime.datetime.now(),

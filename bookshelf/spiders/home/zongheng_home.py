@@ -32,7 +32,7 @@ class ZHHomeSpider(Spider):
             try:
                 info, home_url = get_info_from_home_queue(spider_name=self.name)
                 if home_url:
-                    yield Request(home_url, meta = {'info' : info}, callback=self.home_parse)
+                    yield Request(home_url, meta={'info' : info}, callback=self.home_parse)
             finally:
                 sleep(1)
 

@@ -6,9 +6,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.conns_helper import get_last_crawl_time,\
+from bookshelf.utils.conns_helper import get_last_crawl_time, \
     set_next_crawl_time
-from bookshelf.utils.common import time_2_str, source_spider_sleep,\
+from bookshelf.utils.common import time_2_str, source_spider_sleep, \
     get_source_home_spider, get_every_crawl_timedelta_mins
 from bookshelf.utils.item_helper import gene_book_item
 from scrapy.spider import Spider
@@ -33,7 +33,7 @@ class ZHSpier(Spider):
             self.last_crawl_time = time_2_str(frt='%Y-%m-%d') + ' 00:00:00'
         else:
             self.last_crawl_time = last_crawl_time_str
-        next_crawl_time = time_2_str(delta=-get_every_crawl_timedelta_mins(), delta_unit='minutes')
+        next_crawl_time = time_2_str(delta= -get_every_crawl_timedelta_mins(), delta_unit='minutes')
         set_next_crawl_time(self.name, next_crawl_time)
 
     def make_requests_from_url(self, url):
@@ -49,7 +49,7 @@ class ZHSpier(Spider):
             for bn in book_nodes:
                 u_t = bn.xpath('span[@class="time"]/@title').extract()[0]
                 if u_t >= self.last_crawl_time:
-                    n_c_nodes = bn.xpath('span[@class="chap"]/a') # book name and section nodes
+                    n_c_nodes = bn.xpath('span[@class="chap"]/a')  # book name
                     name = n_c_nodes[0].xpath('@title').extract()[0]
                     source = n_c_nodes[0].xpath('@href').extract()[0]
                     author = bn.xpath('span[@class="author"]/a/@title').extract()[0]
@@ -66,9 +66,9 @@ class ZHSpier(Spider):
 
             yield Request(next_page, callback=self.parse)
         else:
-            self.log(message = '%s spider sleep wait for next round.' % self.name, level = log.INFO)
+            self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
             self.last_crawl_time = get_last_crawl_time(self.name)
-            next_crawl_time = time_2_str(delta=-get_every_crawl_timedelta_mins(), delta_unit='minutes')
+            next_crawl_time = time_2_str(delta= -get_every_crawl_timedelta_mins(), delta_unit='minutes')
             set_next_crawl_time(self.name, next_crawl_time)
             source_spider_sleep()
             yield Request(self.start_urls[0], callback=self.parse)
