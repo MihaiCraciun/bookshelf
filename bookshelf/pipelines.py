@@ -12,7 +12,7 @@ from bookshelf.utils.common import TimeHelper, RedisStrHelper
 from scrapy.exceptions import DropItem
 from bookshelf.items import Book, BookDesc, Sections
 from bookshelf.settings import search_spider_queues, \
-    redis_sep, spider_redis_queues, unupdate_retry_queue, ingrone_spiders, \
+    spider_redis_queues, unupdate_retry_queue, ingrone_spiders, \
     user_favos_update_counts_key_prefix
 import traceback
 from scrapy import log
@@ -55,18 +55,18 @@ class BookPipeline(object):
                     # this book must be searched in other update sites.
                     for sea in search_spider_queues:
                         if not sea in ingrone_spiders:
-                            rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
+                            rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
                     # push current home link to its home spider queue, then the home spider will take the responsibility.
-                    rconn.rpush(spider_redis_queues[item['source_home_spider']], _id + redis_sep + source)
+                    rconn.rpush(spider_redis_queues[item['source_home_spider']], RedisStrHelper.contact(_id, source))
                 else:  # this book has been crawled once or more.
                     book_homes = book['homes']
                     for sea in search_spider_queues:
                         if not sea in ingrone_spiders and (not sea in book_homes):  # if this book has some update sites not crawled yet, search it.
-                            rconn.rpush(search_spider_queues[sea], _id + redis_sep + item['name'])
+                            rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
                         if sea in book_homes:  # get all home url to crawl.
                             home_url = book_homes[sea]
                             if home_url:
-                                rconn.rpush(spider_redis_queues[sea], _id + redis_sep + home_url)
+                                rconn.rpush(spider_redis_queues[sea], RedisStrHelper.contact(_id, home_url))
 
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
@@ -129,13 +129,15 @@ class SectionsPipeline(object):
                     sr_ks = sec_raws.keys()[::-1]
                     for sk in sr_ks:
                         if not sk in old_urls:
-                            sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, item['is_source'], sec_raws[sk], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
+                            sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, item['is_source'],
+                                                                         sec_raws[sk], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
                             i += 1
                         else:
                             break
                 else:
                     for sr in sec_raws:
-                        sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, item['is_source'], sec_raws[sr], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
+                        sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, item['is_source'],
+                                                                     sec_raws[sr], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
                         i += 1
                 if not sec_in_docs and not is_source:  # current executing a update site, no doc to update, push info back to redis and retry.
                     rconn.hset(unupdate_retry_queue, RedisStrHelper.contact(b_id, source, item['spider']), TimeHelper.time_2_str())
@@ -148,7 +150,7 @@ class SectionsPipeline(object):
                         for ufd in user_favo_docs:
                             rconn.hincrby(user_favos_update_counts_key_prefix + ufd['_id'], b_id, update_counts)
 
-                RedisHelper.del_crawling_home(b_id + redis_sep + source)
+                RedisHelper.del_crawling_home(RedisStrHelper.contact(b_id, source))
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
