@@ -6,11 +6,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.conns_helper import get_last_crawl_time, \
-    set_next_crawl_time
-from bookshelf.utils.common import time_2_str, source_spider_sleep, \
-    get_source_home_spider, get_every_crawl_timedelta_mins
-from bookshelf.utils.item_helper import gene_book_item
+from bookshelf.utils.conns_helper import RedisHelper
+from bookshelf.utils.common import TimeHelper, SpiderHelper
+from bookshelf.utils.item_helper import ItemHelper
 from scrapy.spider import Spider
 from scrapy.http.request import Request
 from scrapy.selector import Selector
@@ -27,14 +25,14 @@ class ZHSpier(Spider):
         self.next_page_pattern = 'http://book.zongheng.com/store/c0/c0/b9/u0/p%d/v9/s9/t0/ALL.html'
         self.source_name = u'纵横中文网'
         self.domain = 'http://www.zongheng.com'
-        self.home_spider = get_source_home_spider[self.name]
-        last_crawl_time_str = get_last_crawl_time(self.name)
+        self.home_spider = SpiderHelper.get_source_home_spider[self.name]
+        last_crawl_time_str = RedisHelper.get_last_crawl_time(self.name)
         if not last_crawl_time_str:
-            self.last_crawl_time = time_2_str(frt='%Y-%m-%d') + ' 00:00:00'
+            self.last_crawl_time = TimeHelper.time_2_str(frt='%Y-%m-%d') + ' 00:00:00'
         else:
             self.last_crawl_time = last_crawl_time_str
-        next_crawl_time = time_2_str(delta= -get_every_crawl_timedelta_mins(), delta_unit='minutes')
-        set_next_crawl_time(self.name, next_crawl_time)
+        next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
+        RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
 
     def make_requests_from_url(self, url):
         return Request(url, dont_filter=True, headers={'Referer' : self.domain})
@@ -54,7 +52,7 @@ class ZHSpier(Spider):
                     source = n_c_nodes[0].xpath('@href').extract()[0]
                     author = bn.xpath('span[@class="author"]/a/@title').extract()[0]
 
-                    yield gene_book_item(name, source, author, self.source_name, self.home_spider)
+                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
                 else:
                     is_continue = False
                     break
@@ -67,10 +65,10 @@ class ZHSpier(Spider):
             yield Request(next_page, callback=self.parse)
         else:
             self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
-            self.last_crawl_time = get_last_crawl_time(self.name)
-            next_crawl_time = time_2_str(delta= -get_every_crawl_timedelta_mins(), delta_unit='minutes')
-            set_next_crawl_time(self.name, next_crawl_time)
-            source_spider_sleep()
+            self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
+            next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
+            RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
+            SpiderHelper.source_spider_sleep()
             yield Request(self.start_urls[0], callback=self.parse)
 
     def __str__(self):

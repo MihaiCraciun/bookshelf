@@ -8,13 +8,11 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import datetime
 from scrapy import log
-from bookshelf.utils.item_helper import gene_book_item
+from bookshelf.utils.item_helper import ItemHelper
 from scrapy.selector import Selector
 from scrapy.spider import Spider
-from bookshelf.utils.common import get_source_home_spider, time_2_str, \
-    get_every_crawl_timedelta_mins, source_spider_sleep
-from bookshelf.utils.conns_helper import get_last_crawl_time, \
-    set_next_crawl_time
+from bookshelf.utils.common import TimeHelper, SpiderHelper
+from bookshelf.utils.conns_helper import RedisHelper
 from scrapy.http.request import Request
 
 class CSSpider(Spider):
@@ -28,15 +26,15 @@ class CSSpider(Spider):
         self.next_page_pattern = 'http://chuangshi.qq.com/read/ajax/Novels.html?pageIndex=%d&Website=&Subjectid=&Contentid=&Bookwords=all&Updatestatus=all&Lastupdate=all&Sortby=all&Isvip=all&TitlePinyin=all&TagList=all'
         self.source_name = u'创世中文网'
         self.domain = 'http://chuangshi.qq.com'
-        self.home_spider = get_source_home_spider[self.name]
+        self.home_spider = SpiderHelper.get_source_home_spider[self.name]
         self.curr_page_id = 1
-        last_crawl_time_str = get_last_crawl_time(self.name)
+        last_crawl_time_str = RedisHelper.get_last_crawl_time(self.name)
         if not last_crawl_time_str:
-            self.last_crawl_time = time_2_str(frt='%Y-%m-%d') + ' 00:00:00'
+            self.last_crawl_time = TimeHelper.time_2_str(frt='%Y-%m-%d') + ' 00:00:00'
         else:
             self.last_crawl_time = last_crawl_time_str
-        next_crawl_time = time_2_str(delta= -get_every_crawl_timedelta_mins(), delta_unit='minutes')
-        set_next_crawl_time(self.name, next_crawl_time)
+        next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
+        RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
         self.year = str(datetime.datetime.now().year)
 
     def make_requests_from_url(self, url):
@@ -62,7 +60,7 @@ class CSSpider(Spider):
                     source = self.domain + n_c_nodes[0].xpath('@href').extract()[0]
                     author = bn.xpath('td[last() - 1]/a/child::text()').extract()[0]
 
-                    yield gene_book_item(name, source, author, self.source_name, self.home_spider)
+                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
                 else:
                     is_continue = False
                     break
@@ -73,10 +71,10 @@ class CSSpider(Spider):
         else:
             self.curr_page_id = 1
             self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
-            self.last_crawl_time = get_last_crawl_time(self.name)
-            next_crawl_time = time_2_str(delta= -get_every_crawl_timedelta_mins(), delta_unit='minutes')
-            set_next_crawl_time(self.name, next_crawl_time)
-            source_spider_sleep()
+            self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
+            next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
+            RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
+            SpiderHelper.source_spider_sleep()
             yield Request(self.start_urls[0], callback=self.parse)
 
     def __str__(self):

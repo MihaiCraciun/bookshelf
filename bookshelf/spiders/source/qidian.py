@@ -6,11 +6,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.conns_helper import get_last_crawl_time, \
-    set_next_crawl_time
-from bookshelf.utils.item_helper import gene_book_item
-from bookshelf.utils.common import source_spider_sleep, get_source_home_spider, \
-    get_every_crawl_timedelta_mins
+from bookshelf.utils.conns_helper import RedisHelper
+from bookshelf.utils.item_helper import ItemHelper
+from bookshelf.utils.common import SpiderHelper
 import datetime
 
 from scrapy.http.request import Request
@@ -27,20 +25,20 @@ class QDSpider(Spider):
         self.start_urls = ['http://all.qidian.com/Book/BookStore.aspx?ChannelId=-1&SubCategoryId=-1&Tag=all&Size=-1&Action=-1&OrderId=6&P=all&PageIndex=1&update=4']
         self.source_name = u'起点中文网'
         self.domain = 'http://www.qidian.com'
-        self.home_spider = get_source_home_spider[self.name]
+        self.home_spider = SpiderHelper.get_source_home_spider[self.name]
         now = datetime.datetime.now()
         self.year = str(now.year)
         self.month = str(now.month)
         self.day = str(now.day)
 
-        last_crawl_time_str = get_last_crawl_time(self.name)
+        last_crawl_time_str = RedisHelper.get_last_crawl_time(self.name)
         if not last_crawl_time_str:
             self.last_crawl_time = '%s-%s-%s 00:00:00' % (self.year, self.month, self.day)
         else:
             self.last_crawl_time = last_crawl_time_str
         self.gene_next_crawl_time = lambda (t) : (str(t.year) + '-' + str(t.month) + '-' + str(t.day) + ' ' + t.strftime('%X'))
-        next_crawl_time = self.gene_next_crawl_time(now - datetime.timedelta(minutes=get_every_crawl_timedelta_mins()))
-        set_next_crawl_time(self.name, next_crawl_time)
+        next_crawl_time = self.gene_next_crawl_time(now - datetime.timedelta(minutes=SpiderHelper.get_every_crawl_timedelta_mins()))
+        RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
 
     def make_requests_from_url(self, url):
         return Request(url, dont_filter=True, headers={'Referer' : self.domain})
@@ -60,7 +58,7 @@ class QDSpider(Spider):
                     name = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/child::text()').extract()[0]  # book name
                     author = bn.xpath('div[@class="swd"]/a/child::text()').extract()[0]
 
-                    yield gene_book_item(name, source, author, self.source_name, self.home_spider)
+                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
                 else:
                     is_continue = False  # if the section publish time is less than last crawl time, can't continue.
                     break
@@ -73,10 +71,10 @@ class QDSpider(Spider):
                 self.log(message='%s spider cannot get next page, current url is %s' % (self.name, response._get_url()), level=log.WARNING)
         else:
             self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
-            self.last_crawl_time = get_last_crawl_time(self.name)
-            next_crawl_time = self.gene_next_crawl_time(datetime.datetime.now() - datetime.timedelta(minutes=get_every_crawl_timedelta_mins()))
-            set_next_crawl_time(self.name, next_crawl_time)
-            source_spider_sleep()
+            self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
+            next_crawl_time = self.gene_next_crawl_time(datetime.datetime.now() - datetime.timedelta(minutes=SpiderHelper.get_every_crawl_timedelta_mins()))
+            RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
+            SpiderHelper.source_spider_sleep()
             yield Request(self.start_urls[0], callback=self.parse)
 
     def __str__(self):

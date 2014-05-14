@@ -6,10 +6,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.item_helper import sections_2_doc
-from bookshelf.utils.conns_helper import get_redis_conn, get_mongo, close_mongo, \
-    close_redis_conn, del_crawling_home
-from bookshelf.utils.common import time_2_str
+from bookshelf.utils.item_helper import ItemHelper
+from bookshelf.utils.conns_helper import MongoHelper, RedisHelper
+from bookshelf.utils.common import TimeHelper, RedisStrHelper
 from scrapy.exceptions import DropItem
 from bookshelf.items import Book, BookDesc, Sections
 from bookshelf.settings import search_spider_queues, \
@@ -36,9 +35,9 @@ class BookPipeline(object):
             rconn = None
             mongo = None
             try:
-                rconn = get_redis_conn()
+                rconn = RedisHelper.get_redis_conn()
                 # conn mongodb
-                mongo = get_mongo()
+                mongo = MongoHelper.get_mongo()
                 db = mongo.bookshelf
                 source = item['source']
                 _id = md5(source).hexdigest()  # gene _id
@@ -72,8 +71,8 @@ class BookPipeline(object):
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
-                close_mongo(mongo)
-                close_redis_conn(rconn)
+                MongoHelper.close_mongo(mongo)
+                RedisHelper.close_redis_conn(rconn)
 
 class BookDescPipeline(object):
     '''
@@ -87,13 +86,13 @@ class BookDescPipeline(object):
             mongo = None
             try:
                 # conn mongodb
-                mongo = get_mongo()
+                mongo = MongoHelper.get_mongo()
                 db = mongo.bookshelf
                 db.books.update({"_id" : item['_id']}, {'$set' : {"desc":item['desc']}})
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
-                close_mongo(mongo)
+                MongoHelper.close_mongo(mongo)
 
 class SectionsPipeline(object):
     '''
@@ -107,9 +106,9 @@ class SectionsPipeline(object):
             rconn = None
             mongo = None
             try:
-                rconn = get_redis_conn()
+                rconn = RedisHelper.get_redis_conn()
                 # conn mongodb
-                mongo = get_mongo()
+                mongo = MongoHelper.get_mongo()
                 db = mongo.bookshelf
                 book = db.books.find_one({'_id' : item['b_id']})
                 source = item['source']
@@ -130,16 +129,16 @@ class SectionsPipeline(object):
                     sr_ks = sec_raws.keys()[::-1]
                     for sk in sr_ks:
                         if not sk in old_urls:
-                            sec_in_docs.append(sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, item['is_source'], sec_raws[sk], time_2_str(n + datetime.timedelta(seconds=i))))
+                            sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, item['is_source'], sec_raws[sk], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
                             i += 1
                         else:
                             break
                 else:
                     for sr in sec_raws:
-                        sec_in_docs.append(sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, item['is_source'], sec_raws[sr], time_2_str(n + datetime.timedelta(seconds=i))))
+                        sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, item['is_source'], sec_raws[sr], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
                         i += 1
                 if not sec_in_docs and not is_source:  # current executing a update site, no doc to update, push info back to redis and retry.
-                    rconn.hset(unupdate_retry_queue, b_id + redis_sep + source + redis_sep + item['spider'], time_2_str())
+                    rconn.hset(unupdate_retry_queue, RedisStrHelper.contact(b_id, source, item['spider']), TimeHelper.time_2_str())
                 else:
                     db.sections.insert(sec_in_docs)
 
@@ -149,12 +148,12 @@ class SectionsPipeline(object):
                         for ufd in user_favo_docs:
                             rconn.hincrby(user_favos_update_counts_key_prefix + ufd['_id'], b_id, update_counts)
 
-                del_crawling_home(b_id + redis_sep + source)
+                RedisHelper.del_crawling_home(b_id + redis_sep + source)
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
-                close_mongo(mongo)
-                close_redis_conn(rconn)
+                MongoHelper.close_mongo(mongo)
+                RedisHelper.close_redis_conn(rconn)
 
 class DropPipeline(object):
     '''
