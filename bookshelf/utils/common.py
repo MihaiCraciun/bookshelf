@@ -8,7 +8,7 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import datetime
 from bookshelf.settings import source_home_spiders, every_crawl_timedelta_mins,\
-    redis_sep
+    redis_sep, source_spider_sleep_secs
 import time
 import lxml.etree;
 
@@ -48,7 +48,7 @@ class SpiderHelper():
 
     @staticmethod
     def source_spider_sleep():
-        time.sleep(60 * 10)
+        time.sleep(source_spider_sleep_secs)
 
     @staticmethod
     def get_source_home_spider(spider_name):
