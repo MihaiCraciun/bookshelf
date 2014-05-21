@@ -6,9 +6,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.conns_helper import RedisHelper
-from bookshelf.utils.item_helper import ItemHelper
-from bookshelf.utils.common import SpiderHelper
+from utils.conns_helper import RedisHelper
+from utils.item_helper import ItemHelper
+from utils.common import SpiderHelper
 import datetime
 
 from scrapy.http.request import Request
@@ -25,7 +25,7 @@ class QDSpider(Spider):
         self.start_urls = ['http://all.qidian.com/Book/BookStore.aspx?ChannelId=-1&SubCategoryId=-1&Tag=all&Size=-1&Action=-1&OrderId=6&P=all&PageIndex=1&update=4']
         self.source_name = u'起点中文网'
         self.domain = 'http://www.qidian.com'
-        self.home_spider = SpiderHelper.get_source_home_spider[self.name]
+        self.home_spider = SpiderHelper.get_source_home_spider(self.name)
         now = datetime.datetime.now()
         self.year = str(now.year)
         self.month = str(now.month)
@@ -54,7 +54,8 @@ class QDSpider(Spider):
             for bn in book_nodes:
                 u_time = self.year[:2] + bn.xpath('div[@class="swe"]/child::text()').extract()[0] + ":00"
                 if u_time >= self.last_crawl_time:
-                    source = self.domain + bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/@href').extract()[0]  # first link
+                    source_tmp = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/@href').extract()[0]  # first link
+                    source = source_tmp if source_tmp.starts_with('http://') else (self.domain + source_tmp)
                     name = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/child::text()').extract()[0]  # book name
                     author = bn.xpath('div[@class="swd"]/a/child::text()').extract()[0]
 
@@ -74,8 +75,8 @@ class QDSpider(Spider):
             self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
             next_crawl_time = self.gene_next_crawl_time(datetime.datetime.now() - datetime.timedelta(minutes=SpiderHelper.get_every_crawl_timedelta_mins()))
             RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
-            SpiderHelper.source_spider_sleep()
-            yield Request(self.start_urls[0], callback=self.parse)
+#             SpiderHelper.source_spider_sleep()
+#             yield Request(self.start_urls[0], callback=self.parse)
 
     def __str__(self):
         return self.name

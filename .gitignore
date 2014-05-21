@@ -8,3 +8,4 @@ items
 logs
 project.egg-info
 setup.py
+*.log

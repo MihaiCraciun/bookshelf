@@ -6,7 +6,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.items import Book, BookDesc, Sections
+from items import Book, BookDesc, Sections
 
 class ItemHelper():
 
@@ -51,3 +51,4 @@ class ItemHelper():
                 'name' : name,
                 'crawl_time' : crawl_time
                 }
+

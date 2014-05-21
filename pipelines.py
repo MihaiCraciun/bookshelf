@@ -3,17 +3,17 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import sys
+from utils import celery_call
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.item_helper import ItemHelper
-from bookshelf.utils.conns_helper import MongoHelper, RedisHelper
-from bookshelf.utils.common import TimeHelper, RedisStrHelper
+from utils.item_helper import ItemHelper
+from utils.conns_helper import MongoHelper, RedisHelper
+from utils.common import TimeHelper, RedisStrHelper
 from scrapy.exceptions import DropItem
-from bookshelf.items import Book, BookDesc, Sections
-from bookshelf.settings import search_spider_queues, \
-    spider_redis_queues, unupdate_retry_queue, ingrone_spiders, \
-    user_favos_update_counts_key_prefix
+from items import Book, BookDesc, Sections
+from settings import unupdate_retry_queue, ingrone_spiders, \
+    user_favos_update_counts_key_prefix, search_spider_names
 import traceback
 from scrapy import log
 import datetime
@@ -52,21 +52,42 @@ class BookPipeline(object):
                     b['author'] = item['author']
                     b['homes'] = item['homes']
                     db.books.insert(b)  # insert it to mongodb
+
+                    ##########################################################
+#                     # this book must be searched in other update sites.
+#                     for sea in search_spider_queues:
+#                         if not sea in ingrone_spiders:
+#                             rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
+#                     # push current home link to its home spider queue, then the home spider will take the responsibility.
+#                     rconn.rpush(spider_redis_queues[item['source_home_spider']], RedisStrHelper.contact(_id, source))
+                    ##########################################################
+
                     # this book must be searched in other update sites.
-                    for sea in search_spider_queues:
+                    for sea in search_spider_names:
                         if not sea in ingrone_spiders:
-                            rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
+                            celery_call.call(search_spider_names[sea], b_id=_id, b_name=item['name'])
                     # push current home link to its home spider queue, then the home spider will take the responsibility.
-                    rconn.rpush(spider_redis_queues[item['source_home_spider']], RedisStrHelper.contact(_id, source))
+                    celery_call.call(item['source_home_spider'], b_id=_id, src=source)
+
                 else:  # this book has been crawled once or more.
                     book_homes = book['homes']
-                    for sea in search_spider_queues:
+                    ###########################################################
+#                     for sea in search_spider_queues:
+#                         if not sea in ingrone_spiders and (not sea in book_homes):  # if this book has some update sites not crawled yet, search it.
+#                             rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
+#                         if sea in book_homes:  # get all home url to crawl.
+#                             home_url = book_homes[sea]
+#                             if home_url:
+#                                 rconn.rpush(spider_redis_queues[sea], RedisStrHelper.contact(_id, home_url))
+                    ###########################################################
+
+                    for sea in search_spider_names:
                         if not sea in ingrone_spiders and (not sea in book_homes):  # if this book has some update sites not crawled yet, search it.
-                            rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
+                            celery_call.call(search_spider_names[sea], b_id=_id, b_name=item['name'])
                         if sea in book_homes:  # get all home url to crawl.
                             home_url = book_homes[sea]
                             if home_url:
-                                rconn.rpush(spider_redis_queues[sea], RedisStrHelper.contact(_id, home_url))
+                                celery_call.call(sea, b_id=_id, src=home_url)
 
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)

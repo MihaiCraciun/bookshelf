@@ -12,22 +12,22 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 BOT_NAME = 'bookshelf'
 
 SPIDER_MODULES = [
-                  'bookshelf.spiders.source',
-                  'bookshelf.spiders.home',
-                  'bookshelf.spiders.search'
+                  'spiders.source',
+                  'spiders.home',
+                  'spiders.search'
                   ]
-NEWSPIDER_MODULE = 'bookshelf.spiders'
+NEWSPIDER_MODULE = 'spiders'
 ITEM_PIPELINES = {
-    'bookshelf.pipelines.BookPipeline' : 500,
-    'bookshelf.pipelines.BookDescPipeline' : 501,
-    'bookshelf.pipelines.SectionsPipeline' : 502,
-    'bookshelf.pipelines.DropPipeline' : 503
+    'pipelines.BookPipeline' : 500,
+    'pipelines.BookDescPipeline' : 501,
+    'pipelines.SectionsPipeline' : 502,
+    'pipelines.DropPipeline' : 503
 }
 DOWNLOAD_TIMEOUT = 30
 CONCURRENT_REQUESTS = 128
 
 DUPEFILTER_DEBUG = True
-DUPEFILTER_CLASS = 'bookshelf.dupefilters.UnFilterDupeFilter'
+DUPEFILTER_CLASS = 'dupefilters.UnFilterDupeFilter'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.79 Safari/535.11'
@@ -39,9 +39,9 @@ DEFAULT_REQUEST_HEADERS = {
                            'Connection': 'keep-alive'
                            }
 
-
-# LOG_FILE = 'bookshelf.log'
-# LOG_LEVEL = 'DEBUG'
+LOG_ENABLED = True
+LOG_FILE = './log/bookshelf.log'
+LOG_LEVEL = 'DEBUG'
 
 MEMDEBUG_NOTIFY = ['zhiying8710@hotmail.com']
 ROBOTSTXT_OBEY = False
@@ -65,10 +65,16 @@ search_spider_queues = {
                         'qdhome' : '__qd_sea_queue',
                         'zhhome' : '__zh_sea_queue'
                         }
+
+search_spider_names = {
+                        'qdhome' : 'qdsea',
+                        'zhhome' : 'zhsea'
+                        }
 unupdate_retry_queue = '__unupdate_retry_queue'
 crawling_key_prefix = '__crawling_'
 crawling_key_expire = 3 * 60  # this must less than source_spider_sleep
 last_crawl_time_key = '__last_crawl_time'
+celery_task_info_key = '__celery_task_info'
 
 user_favos_update_counts_key_prefix = '__user_favos_update_counts_'
 
@@ -79,4 +85,7 @@ redis_port = 6379
 redis_def_db = 0
 redis_sep = ':::'
 
-
+celery_proj = "bookshelf"
+celery_broker = "redis://"
+celery_backend = "redis://"
+celery_include = ['utils.celery_tasks']

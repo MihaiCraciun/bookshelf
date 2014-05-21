@@ -6,9 +6,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from bookshelf.utils.conns_helper import RedisHelper
-from bookshelf.utils.common import TimeHelper, SpiderHelper
-from bookshelf.utils.item_helper import ItemHelper
+from utils.conns_helper import RedisHelper
+from utils.common import TimeHelper, SpiderHelper
+from utils.item_helper import ItemHelper
 from scrapy.spider import Spider
 from scrapy.http.request import Request
 from scrapy.selector import Selector
@@ -25,7 +25,7 @@ class ZHSpier(Spider):
         self.next_page_pattern = 'http://book.zongheng.com/store/c0/c0/b9/u0/p%d/v9/s9/t0/ALL.html'
         self.source_name = u'纵横中文网'
         self.domain = 'http://www.zongheng.com'
-        self.home_spider = SpiderHelper.get_source_home_spider[self.name]
+        self.home_spider = SpiderHelper.get_source_home_spider(self.name)
         last_crawl_time_str = RedisHelper.get_last_crawl_time(self.name)
         if not last_crawl_time_str:
             self.last_crawl_time = TimeHelper.time_2_str(frt='%Y-%m-%d') + ' 00:00:00'
@@ -68,8 +68,8 @@ class ZHSpier(Spider):
             self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
             next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
             RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
-            SpiderHelper.source_spider_sleep()
-            yield Request(self.start_urls[0], callback=self.parse)
+#             SpiderHelper.source_spider_sleep()
+#             yield Request(self.start_urls[0], callback=self.parse)
 
     def __str__(self):
         return self.name

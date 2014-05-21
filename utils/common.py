@@ -7,7 +7,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import datetime
-from bookshelf.settings import source_home_spiders, every_crawl_timedelta_mins,\
+from settings import source_home_spiders, every_crawl_timedelta_mins,\
     redis_sep, source_spider_sleep_secs
 import time
 import lxml.etree;
@@ -65,16 +65,30 @@ class RedisStrHelper():
         return s.split(redis_sep)
 
     @staticmethod
-    def contact(*kwargs):
+    def contact(*kwargs, **kwparas):
+        s = ''
         if kwargs:
-            s = ''
             for arg in kwargs:
-                s += arg + redis_sep
+                if not arg is None:
+                    if arg.__class__ is list:
+                        for a in arg:
+                            s += str(a) + redis_sep
+                    else:
+                        s += str(arg) + redis_sep
+        if kwparas:
+            for k in kwparas:
+                if not kwparas[k] is None:
+                    if kwparas[k].__class__ is list:
+                        for b in kwparas[k]:
+                            s += str(b) + redis_sep
+                    else:
+                        s += str(kwparas[k]) + redis_sep
+        if s:
             return s[:-len(redis_sep)]
         else:
-            return ''
+            return s
 
 def create_dom(data, parser=None):
     if not parser:
-        parser = lxml.etree.HTMLParser()
-    return lxml.etree.fromstring(data, parser);
+        parser = lxml.etree.HTMLParser()  # @UndefinedVariable
+    return lxml.etree.fromstring(data, parser);  # @UndefinedVariable

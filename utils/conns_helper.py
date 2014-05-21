@@ -6,10 +6,11 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
+from utils.common import RedisStrHelper
 import redis
-from bookshelf.settings import redis_def_db, redis_host, redis_port, mongo_host, \
+from settings import redis_def_db, redis_host, redis_port, mongo_host, \
     mongo_port, spider_redis_queues, crawling_key_prefix, crawling_key_expire, \
-    redis_sep, last_crawl_time_key
+    redis_sep, last_crawl_time_key, celery_task_info_key
 import pymongo
 
 class RedisHelper():
@@ -106,6 +107,45 @@ class RedisHelper():
         try:
             rconn = RedisHelper.get_redis_conn()
             rconn.delete(crawling_key)
+        finally:
+            RedisHelper.close_redis_conn(rconn)
+
+    @staticmethod
+    def set_celery_task_info(res_id, spider_name, status='PENGING', **kwargs):
+        rconn = None
+        try:
+            rconn = RedisHelper.get_redis_conn()
+            rconn.hset(celery_task_info_key, res_id, RedisStrHelper.contact(status, spider_name, **kwargs))
+        finally:
+            RedisHelper.close_redis_conn(rconn)
+
+    @staticmethod
+    def get_all_celery_tasks_info():
+        rconn = None
+        try:
+            rconn = RedisHelper.get_redis_conn()
+            return rconn.hgetall(celery_task_info_key)
+        finally:
+            RedisHelper.close_redis_conn(rconn)
+
+    @staticmethod
+    def update_celery_task_status(res_id, status):
+        rconn = None
+        try:
+            rconn = RedisHelper.get_redis_conn()
+            val = rconn.hget(celery_task_info_key, res_id)
+            vs = RedisStrHelper.split(val)
+            vs[0] = status
+            rconn.hsetnx(celery_task_info_key, res_id, RedisStrHelper.contact(vs))
+        finally:
+            RedisHelper.close_redis_conn(rconn)
+
+    @staticmethod
+    def del_celery_task_status(res_id):
+        rconn = None
+        try:
+            rconn = RedisHelper.get_redis_conn()
+            rconn.hdel(celery_task_info_key, res_id)
         finally:
             RedisHelper.close_redis_conn(rconn)
 

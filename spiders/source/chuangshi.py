@@ -8,11 +8,11 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import datetime
 from scrapy import log
-from bookshelf.utils.item_helper import ItemHelper
+from utils.item_helper import ItemHelper
+from utils.common import TimeHelper, SpiderHelper
+from utils.conns_helper import RedisHelper
 from scrapy.selector import Selector
 from scrapy.spider import Spider
-from bookshelf.utils.common import TimeHelper, SpiderHelper
-from bookshelf.utils.conns_helper import RedisHelper
 from scrapy.http.request import Request
 
 class CSSpider(Spider):
@@ -26,7 +26,7 @@ class CSSpider(Spider):
         self.next_page_pattern = 'http://chuangshi.qq.com/read/ajax/Novels.html?pageIndex=%d&Website=&Subjectid=&Contentid=&Bookwords=all&Updatestatus=all&Lastupdate=all&Sortby=all&Isvip=all&TitlePinyin=all&TagList=all'
         self.source_name = u'创世中文网'
         self.domain = 'http://chuangshi.qq.com'
-        self.home_spider = SpiderHelper.get_source_home_spider[self.name]
+        self.home_spider = SpiderHelper.get_source_home_spider(self.name)
         self.curr_page_id = 1
         last_crawl_time_str = RedisHelper.get_last_crawl_time(self.name)
         if not last_crawl_time_str:
@@ -69,13 +69,13 @@ class CSSpider(Spider):
             next_page = self.next_page_pattern % (self.curr_page_id)
             yield Request(next_page, callback=self.parse)
         else:
-            self.curr_page_id = 1
             self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
+#             self.curr_page_id = 1
             self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
             next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
             RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
-            SpiderHelper.source_spider_sleep()
-            yield Request(self.start_urls[0], callback=self.parse)
+#             SpiderHelper.source_spider_sleep()
+#             yield Request(self.start_urls[0], callback=self.parse)
 
     def __str__(self):
         return self.name
