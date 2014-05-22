@@ -17,8 +17,8 @@ from utils.celery_tasks import start_spider
 from celery.events.state import State
 
 def get_tasks_uuid(task_type):
-    tasks = State().tasks_by_type('start_spider')
-    uuids = set([])
+    tasks = State().tasks_by_type(task_type)
+    uuids = set()
     for uuid, _ in tasks:
         uuids.add(uuid)
     return uuids
@@ -34,15 +34,13 @@ def update_celery_tasks_status():
         infos = RedisHelper.get_all_celery_tasks_info()
         res_ids = get_tasks_uuid('start_spider')
         for res_id in infos:
+            is_complete = False
+            info = infos[res_id]
+            spider_name = RedisStrHelper.split(info)[1]
             if res_id in res_ids:
                 res = app.AsyncResult(res_id)
                 if res.state == 'SUCCESS':
-                    info = infos[res_id]
-                    spider_name = RedisStrHelper.split(info)[1]
-                    if spider_name in source_home_spiders:
-    #                     time.sleep(1 * 60)
-                        call(spider_name)
-                    RedisHelper.del_celery_task_status(res_id)
+                    is_complete = True
                 else:
                     if res.state == 'FAILURE':
                         print res.trackback()
@@ -50,6 +48,11 @@ def update_celery_tasks_status():
                         pass
                     RedisHelper.update_celery_task_status(res_id, res.state)
             else:
+                is_complete = True
+            if is_complete:
+                if spider_name in source_home_spiders:
+    #                     time.sleep(1 * 60)
+                        call(spider_name)
                 RedisHelper.del_celery_task_status(res_id)
 
     schedudler.start()
@@ -57,3 +60,4 @@ def update_celery_tasks_status():
 def call(spider_name, **spider_kwargs):
     res = delay_crawl(spider_name, **spider_kwargs)
     RedisHelper.set_celery_task_info(res.id, spider_name, res.state, **spider_kwargs)
+    update_celery_tasks_status()

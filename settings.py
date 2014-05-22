@@ -50,25 +50,29 @@ every_crawl_timedelta_mins = 3
 source_spider_sleep_secs = 60 * 10
 
 # config
-ingrone_spiders = set(['qdhome', 'zhhome', 'cshome'])
+ingrone_spiders = set(['qdhome', 'zhhome', 'cshome', 'k17home'])
 source_home_spiders = {
                        'qd' : 'qdhome',
                        'zh' : 'zhhome',
-                       'cs' : 'cshome'
+                       'cs' : 'cshome',
+                       'k17' : 'k17home'
                        }
 spider_redis_queues = {
                        'qdhome' : '__qidian_home_queue',
                        'zhhome' : '__zongheng_home_queue',
-                       'cshome' : '__chuangshi_home_queue'
+                       'cshome' : '__chuangshi_home_queue',
+                       'k17home' : '__k17_home_queue'
                        }
 search_spider_queues = {
                         'qdhome' : '__qd_sea_queue',
-                        'zhhome' : '__zh_sea_queue'
+                        'zhhome' : '__zh_sea_queue',
+                        'k17home' : '__k17_sea_queue'
                         }
 
 search_spider_names = {
                         'qdhome' : 'qdsea',
-                        'zhhome' : 'zhsea'
+                        'zhhome' : 'zhsea',
+                        'k17' : 'k17sea'
                         }
 unupdate_retry_queue = '__unupdate_retry_queue'
 crawling_key_prefix = '__crawling_'

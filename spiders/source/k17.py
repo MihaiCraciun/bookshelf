@@ -1,69 +1,63 @@
 # encoding: utf-8
-# Created on 2014-5-7
+# Created on 2014-5-22
 # @author: binge
 
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from spiders.common_spider import CommonSpider
-from utils.conns_helper import RedisHelper
-from utils.item_helper import ItemHelper
-from utils.common import SpiderHelper
-import datetime
-
-from scrapy.http.request import Request
-
-from scrapy import log
 from scrapy.selector import Selector
+from scrapy import log
+from utils.item_helper import ItemHelper
+from scrapy.http.request import Request
+import datetime
+from utils.common import SpiderHelper, TimeHelper
+from utils.conns_helper import RedisHelper
+from spiders.common_spider import CommonSpider
 
-class QDSpider(CommonSpider):
+class K17Spiser(CommonSpider):
 
-    name = 'qd'
+    name = 'k17'
 
     def __init__(self, **kwargs):
-        self.start_urls = ['http://all.qidian.com/Book/BookStore.aspx?ChannelId=-1&SubCategoryId=-1&Tag=all&Size=-1&Action=-1&OrderId=6&P=all&PageIndex=1&update=4']
-        self.source_name = u'起点中文网'
-        self.domain = 'http://www.qidian.com'
+        self.start_urls = [
+                           'http://all.17k.com/all'
+                           ]
+        self.source_name = u'17K小说网'
+        self.domain = 'http://www.17k.com'
+        self.next_page_domain = 'http://all.17k.com'
         self.home_spider = SpiderHelper.get_source_home_spider(self.name)
-        now = datetime.datetime.now()
-        self.year = str(now.year)
-        self.month = str(now.month)
-        self.day = str(now.day)
-
         last_crawl_time_str = RedisHelper.get_last_crawl_time(self.name)
         if not last_crawl_time_str:
-            self.last_crawl_time = '%s-%s-%s 00:00:00' % (self.year, self.month, self.day)
+            self.last_crawl_time = TimeHelper.time_2_str(frt='%Y-%m-%d') + ' 00:00:00'
         else:
             self.last_crawl_time = last_crawl_time_str
-        self.gene_next_crawl_time = lambda (t) : (str(t.year) + '-' + str(t.month) + '-' + str(t.day) + ' ' + t.strftime('%X'))
-        next_crawl_time = self.gene_next_crawl_time(now - datetime.timedelta(minutes=SpiderHelper.get_every_crawl_timedelta_mins()))
+        next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
         RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
 
     def parse(self, response):
         is_continue = True
         hxs = Selector(response)
-        book_nodes = hxs.xpath('//div[@class="sw1"] | //div[@class="sw2"]')
+        book_nodes = hxs.xpath('//div[@class="alltable"]//tr[positions() > 2]')
         if not book_nodes:
             self.log(message='%s spider get nothing in home page, current url is %s' % (self.name, response._get_url()), level=log.WARNING)
             is_continue = False
         else:
             for bn in book_nodes:
-                u_time = self.year[:2] + bn.xpath('div[@class="swe"]/child::text()').extract()[0] + ":00"
+                u_time = bn.xpath('td[@class="td7"]/child::text()').extract()[0] + ":00"
                 if u_time >= self.last_crawl_time:
-                    source_tmp = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/@href').extract()[0]  # first link
-                    source = source_tmp if source_tmp.startswith('http://') else (self.domain + source_tmp)
-                    name = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/child::text()').extract()[0]  # book name
-                    author = bn.xpath('div[@class="swd"]/a/child::text()').extract()[0]
+                    source = bn.xpath('td[@class="td3"]//a/@href').extract()[0]  # first link
+                    name = bn.xpath('td[@class="td3"]//a/child::text()').extract()[0]  # book name
+                    author = bn.xpath('td[@class="td6"]/a/child::text()').extract()[0]
 
                     yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
                 else:
                     is_continue = False  # if the section publish time is less than last crawl time, can't continue.
                     break
         if is_continue:
-            next_page_nodes = hxs.xpath('//div[@class="storelistbottom"]/a[@class="f_s"]/following-sibling::a')
+            next_page_nodes = hxs.xpath('//a[@class="on"]/following-sibling::a')
             if next_page_nodes:
-                next_page = next_page_nodes[0].xpath('@href').extract()[0]
+                next_page = self.next_page_domain + next_page_nodes[0].xpath('@href').extract()[0]
                 yield Request(next_page, callback=self.parse)
             else:
                 self.log(message='%s spider cannot get next page, current url is %s' % (self.name, response._get_url()), level=log.WARNING)

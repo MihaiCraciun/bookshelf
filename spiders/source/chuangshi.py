@@ -8,14 +8,14 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import datetime
 from scrapy import log
+from spiders.common_spider import CommonSpider
 from utils.item_helper import ItemHelper
 from utils.common import TimeHelper, SpiderHelper
 from utils.conns_helper import RedisHelper
 from scrapy.selector import Selector
-from scrapy.spider import Spider
 from scrapy.http.request import Request
 
-class CSSpider(Spider):
+class CSSpider(CommonSpider):
 
     name = 'cs'
 
@@ -36,9 +36,6 @@ class CSSpider(Spider):
         next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
         RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
         self.year = str(datetime.datetime.now().year)
-
-    def make_requests_from_url(self, url):
-        return Request(url, dont_filter=True, headers={'Referer' : self.domain})
 
     def parse(self, response):
         is_continue = True
@@ -76,6 +73,3 @@ class CSSpider(Spider):
             RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
 #             SpiderHelper.source_spider_sleep()
 #             yield Request(self.start_urls[0], callback=self.parse)
-
-    def __str__(self):
-        return self.name

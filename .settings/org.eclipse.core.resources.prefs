@@ -1,8 +1,11 @@
 eclipse.preferences.version=1
+encoding//spiders/common_spider.py=utf-8
 encoding//spiders/home/chuangshi_home.py=utf-8
+encoding//spiders/home/k17_home.py=utf-8
 encoding//spiders/home/qidian_home.py=utf-8
 encoding//spiders/home/zongheng_home.py=utf-8
 encoding//spiders/source/chuangshi.py=utf-8
+encoding//spiders/source/k17.py=utf-8
 encoding//spiders/source/qidian.py=utf-8
 encoding//spiders/source/zongheng.py=utf-8
 encoding//test/celery_conf.py=utf-8

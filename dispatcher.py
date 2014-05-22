@@ -3,7 +3,7 @@
 # @author: binge
 
 import sys
-from utils.celery_call import call, update_celery_tasks_status
+from utils.celery_call import call
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
@@ -18,12 +18,10 @@ def run_worker():
 
 def start():
 #     run_worker()
-    call('qd')
+#     call('qd')
 #     call('qdhome', src='http://www.qidian.com/Book/147919.aspx', b_id='2acf3455598bc4839218e8035e8ccf3a')
-#     for sn in source_home_spiders:
-#         call(sn)
-
-    update_celery_tasks_status()
+    for sn in source_home_spiders:
+        call(sn)
 
 if __name__ == '__main__':
     start()

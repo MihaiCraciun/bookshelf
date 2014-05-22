@@ -6,15 +6,15 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from scrapy.spider import Spider
 from scrapy.http.request import Request
+from spiders.common_spider import CommonSpider
 from utils.item_helper import ItemHelper
 from scrapy.selector import Selector
 import base64
 import re
 from collections import OrderedDict
 
-class CSHomeSpider(Spider):
+class CSHomeSpider(CommonSpider):
 
     name = 'cshome'
 
@@ -48,9 +48,6 @@ class CSHomeSpider(Spider):
 #         directory_url = self.directory_pattern % source_book_id
 #         yield Request(directory_url, meta=response.meta, callback=self.directory_parse)
 
-    def make_requests_from_url(self, url):
-        return Request(url, dont_filter=True, headers={'Referer' : self.domain})
-
     def parse(self, response):
         url = response._get_url()
         hxs = Selector(response)
@@ -72,6 +69,3 @@ class CSHomeSpider(Spider):
 #         vs = RedisStrHelper.split(response.meta['info'])
 #         yield ItemHelper.gene_sections_item(self.source_short_name, self.source_zh_name, vs[0], vs[1], self.name, secs, 1)
         yield ItemHelper.gene_sections_item(self.source_short_name, self.source_zh_name, self._id, self.start_urls[0], self.name, secs, 1)
-
-    def __str__(self):
-        return self.name

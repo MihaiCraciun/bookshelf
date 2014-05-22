@@ -6,16 +6,16 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
+from spiders.common_spider import CommonSpider
 from utils.conns_helper import RedisHelper
 from utils.common import TimeHelper, SpiderHelper
 from utils.item_helper import ItemHelper
-from scrapy.spider import Spider
 from scrapy.http.request import Request
 from scrapy.selector import Selector
 from scrapy import log
 import re
 
-class ZHSpier(Spider):
+class ZHSpier(CommonSpider):
     name = 'zh'
 
     def __init__(self, **kwargs):
@@ -33,9 +33,6 @@ class ZHSpier(Spider):
             self.last_crawl_time = last_crawl_time_str
         next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
         RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
-
-    def make_requests_from_url(self, url):
-        return Request(url, dont_filter=True, headers={'Referer' : self.domain})
 
     def parse(self, response):
         is_continue = True
@@ -71,5 +68,3 @@ class ZHSpier(Spider):
 #             SpiderHelper.source_spider_sleep()
 #             yield Request(self.start_urls[0], callback=self.parse)
 
-    def __str__(self):
-        return self.name
