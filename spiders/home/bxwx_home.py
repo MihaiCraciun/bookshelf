@@ -3,14 +3,15 @@
 # @author: binge
 
 import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')  # @UndefinedVariable
+
 from spiders.common_spider import CommonSpider
 from scrapy.http.request import Request
 from scrapy.selector import Selector
 from collections import OrderedDict
 from w3lib.url import urljoin_rfc
 from utils.item_helper import ItemHelper
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 class BXWXHomeSpider(CommonSpider):
 
