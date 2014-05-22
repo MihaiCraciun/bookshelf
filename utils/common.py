@@ -8,7 +8,8 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 import datetime
 from settings import source_home_spiders, every_crawl_timedelta_mins,\
-    redis_sep, source_spider_sleep_secs
+    redis_sep, source_spider_sleep_secs, search_spider_names,\
+    book_no_home_url_val
 import time
 import lxml.etree;
 
@@ -58,6 +59,12 @@ class SpiderHelper():
     def get_every_crawl_timedelta_mins():
         return every_crawl_timedelta_mins
 
+    @staticmethod
+    def get_sea_result_home_spider(sea_spider_name):
+        for home_spider in search_spider_names:
+            if search_spider_names[home_spider] == sea_spider_name:
+                return home_spider
+
 class RedisStrHelper():
 
     @staticmethod
@@ -92,3 +99,9 @@ def create_dom(data, parser=None):
     if not parser:
         parser = lxml.etree.HTMLParser()  # @UndefinedVariable
     return lxml.etree.fromstring(data, parser);  # @UndefinedVariable
+
+class SettingsHelper():
+
+    @staticmethod
+    def get_book_no_home_url_val():
+        return book_no_home_url_val

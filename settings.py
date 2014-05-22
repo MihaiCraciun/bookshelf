@@ -21,7 +21,8 @@ ITEM_PIPELINES = {
     'pipelines.BookPipeline' : 500,
     'pipelines.BookDescPipeline' : 501,
     'pipelines.SectionsPipeline' : 502,
-    'pipelines.DropPipeline' : 503
+    'pipelines.UpdateSiteBookPipeline' : 503,
+    'pipelines.DropPipeline' : 510
 }
 DOWNLOAD_TIMEOUT = 30
 CONCURRENT_REQUESTS = 128
@@ -57,6 +58,18 @@ source_home_spiders = {
                        'cs' : 'cshome',
                        'k17' : 'k17home'
                        }
+
+search_spider_names = {
+                        'qdhome' : 'qdsea',
+                        'zhhome' : 'zhsea',
+                        'cshome' : 'cssea',
+                        'k17home' : 'k17sea',
+                        'lu5home' : 'lusea',
+                        'bxwxhome' : 'bxwxsea',
+                        'ranwenhome' : 'ranwensea'
+                        }
+
+####################################################
 spider_redis_queues = {
                        'qdhome' : '__qidian_home_queue',
                        'zhhome' : '__zongheng_home_queue',
@@ -69,11 +82,8 @@ search_spider_queues = {
                         'k17home' : '__k17_sea_queue'
                         }
 
-search_spider_names = {
-                        'qdhome' : 'qdsea',
-                        'zhhome' : 'zhsea',
-                        'k17' : 'k17sea'
-                        }
+book_no_home_url_val = 'NONE'
+
 unupdate_retry_queue = '__unupdate_retry_queue'
 crawling_key_prefix = '__crawling_'
 crawling_key_expire = 3 * 60  # this must less than source_spider_sleep

@@ -1,9 +1,15 @@
 eclipse.preferences.version=1
 encoding//spiders/common_spider.py=utf-8
+encoding//spiders/home/bxwx_home.py=utf-8
 encoding//spiders/home/chuangshi_home.py=utf-8
 encoding//spiders/home/k17_home.py=utf-8
+encoding//spiders/home/lu5_home.py=utf-8
 encoding//spiders/home/qidian_home.py=utf-8
+encoding//spiders/home/ranwen_home.py=utf-8
 encoding//spiders/home/zongheng_home.py=utf-8
+encoding//spiders/search/bxwxsea.py=utf-8
+encoding//spiders/search/lu5sea.py=utf-8
+encoding//spiders/search/ranwensea.py=utf-8
 encoding//spiders/source/chuangshi.py=utf-8
 encoding//spiders/source/k17.py=utf-8
 encoding//spiders/source/qidian.py=utf-8

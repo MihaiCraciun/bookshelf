@@ -6,7 +6,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from items import Book, BookDesc, Sections
+from items import Book, BookDesc, Sections, UpdateSiteBook
 
 class ItemHelper():
 
@@ -52,3 +52,10 @@ class ItemHelper():
                 'crawl_time' : crawl_time
                 }
 
+    @staticmethod
+    def gene_update_site_book_item(_id, home_url, home_spider):
+        item = UpdateSiteBook()
+        item['_id'] = _id
+        item['home_url'] = home_url
+        item['home_spider'] = home_spider
+        return item

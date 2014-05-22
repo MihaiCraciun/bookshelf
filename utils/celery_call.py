@@ -29,7 +29,7 @@ def delay_crawl(spider_name, **spider_kwargs):
 def update_celery_tasks_status():
     schedudler = Scheduler(daemonic = False)
 
-    @schedudler.cron_schedule(second='*/30', max_instances=3)
+    @schedudler.cron_schedule(second='*/30', max_instances=1)
     def update_job():
         infos = RedisHelper.get_all_celery_tasks_info()
         res_ids = get_tasks_uuid('start_spider')

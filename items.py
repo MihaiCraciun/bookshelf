@@ -24,6 +24,11 @@ class BookDesc(Item):
     _id = Field()  # id
     desc = Field()
 
+class UpdateSiteBook():
+    _id = Field()
+    home_spider = Field()
+    home_url = Field()
+
 class Sections(Item):
     b_id = Field()  # book id
     secs = Field()  # sections, is a OrderedDict, key is section's url, value is sections's name

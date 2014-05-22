@@ -3,6 +3,9 @@
 # @author: binge
 
 import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')  # @UndefinedVariable
+
 from spiders.common_spider import CommonSpider
 from scrapy.selector import Selector
 import base64
@@ -10,8 +13,6 @@ from utils.item_helper import ItemHelper
 from scrapy.http.request import Request
 from collections import OrderedDict
 import re
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 class K17HomeSpider(CommonSpider):
 
