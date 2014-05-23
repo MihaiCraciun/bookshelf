@@ -32,5 +32,5 @@ class FQXSWHomeSpider(CommonSpider):
             secs[url] = name
 #         vs = RedisStrHelper.split(response.meta['info'])
 #         yield ItemHelper.gene_sections_item(self.source_short_name, self.source_zh_name, vs[0], vs[1], self.name, secs, 1)
-        yield ItemHelper.gene_sections_item(self.source_short_name, self.source_zh_name, self._id, self.start_urls[0], self.name, secs, 1)
+        yield ItemHelper.gene_sections_item(self.source_short_name, self.source_zh_name, self._id, self.start_urls[0], self.name, secs, 0)
 
