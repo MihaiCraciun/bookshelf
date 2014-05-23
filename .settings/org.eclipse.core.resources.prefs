@@ -8,6 +8,7 @@ encoding//spiders/home/qidian_home.py=utf-8
 encoding//spiders/home/ranwen_home.py=utf-8
 encoding//spiders/home/zongheng_home.py=utf-8
 encoding//spiders/search/bxwxsea.py=utf-8
+encoding//spiders/search/fqxswsea.py=utf-8
 encoding//spiders/search/lu5sea.py=utf-8
 encoding//spiders/search/ranwensea.py=utf-8
 encoding//spiders/source/chuangshi.py=utf-8

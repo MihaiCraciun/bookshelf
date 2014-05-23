@@ -22,7 +22,6 @@ class BXWXSeaSpider(CommonSpider):
         self.sea_url = 'http://www.bxwx.org/modules/article/searchcc.php'
         self.b_id = kwargs['b_id']
         self.b_author = kwargs['b_author']
-        self.lu5_home_pattern = 'http://www.lu5.com/book/[0-9]+.html'
         self.home_spider = SpiderHelper.get_sea_result_home_spider(self.name)
 
     def start_requests(self):
@@ -34,14 +33,9 @@ class BXWXSeaSpider(CommonSpider):
     def parse_result(self, response):
         hxs = Selector(response)
         book_nodes = hxs.xpath('//div[@id="centerm"]//tr[position() > 1]/td[@class="odd"]')
-        if book_nodes:
-            for bn in book_nodes:
-                if bn[0].xpath('a/child::text()').extract()[0] == self.kw and str(bn[1].xpath('child::text()').extract()[0]).strip() == self.b_author:
-                    n_home_url = self.domain + bn[0].xpath('a/@href').extract()[0]
-                    yield ItemHelper.gene_update_site_book_item(self.b_id, n_home_url, self.home_spider)
-                    break
-            else:
-                no_results = True
+        if book_nodes and book_nodes[0].xpath('a/child::text()').extract()[0] == self.kw and str(book_nodes[1].xpath('child::text()').extract()[0]).strip() == self.b_author:
+            n_home_url = self.domain + book_nodes[0].xpath('a/@href').extract()[0]
+            yield ItemHelper.gene_update_site_book_item(self.b_id, n_home_url, self.home_spider)
         else:
             no_results = True
         if no_results:

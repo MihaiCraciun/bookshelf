@@ -38,22 +38,14 @@ class LU5SeaSpider(CommonSpider):
         no_results = False
         if url == self.sea_url:
             book_nodes = hxs.xpath('//dl[@id="content"]//tr[position() > 1]/td[@class="odd"]')
-            if book_nodes:
-                for bn in book_nodes:
-                    if bn[0].xpath('a/child::text()').extract()[0] == self.kw and str(bn[1].xpath('child::text()').extract()[0]).strip() == self.b_author:
-                        n_home_url = bn[0].xpath('a/@href').extract()[0]
-                        yield ItemHelper.gene_update_site_book_item(self.b_id, n_home_url, self.home_spider)
-                        break
-                else:
-                    no_results = True
+            if book_nodes and book_nodes[0].xpath('a/child::text()').extract()[0] == self.kw and str(book_nodes[1].xpath('child::text()').extract()[0]).strip() == self.b_author:
+                n_home_url = book_nodes[0].xpath('a/@href').extract()[0]
+                yield ItemHelper.gene_update_site_book_item(self.b_id, n_home_url, self.home_spider)
             else:
                 no_results = True
 
-        elif re.search(self.lu5_home_pattern, url):
-            if str(hxs.xpath('//table[@id="at"]/tr[1]/td[2]/child::text()').extract()[0]).replace('&nbsp;', '').strip() == self.b_author:
-                yield ItemHelper.gene_update_site_book_item(self.b_id, url, self.home_spider)
-            else:
-                no_results = True
+        elif re.search(self.lu5_home_pattern, url) and str(hxs.xpath('//table[@id="at"]/tr[1]/td[2]/child::text()').extract()[0]).replace('&nbsp;', '').strip() == self.b_author:
+            yield ItemHelper.gene_update_site_book_item(self.b_id, url, self.home_spider)
         else:
             no_results = True
         if no_results:
