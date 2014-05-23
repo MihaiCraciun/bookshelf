@@ -3,14 +3,15 @@
 # @author: binge
 
 import sys
+import re
+reload(sys)
+sys.setdefaultencoding('utf-8')  # @UndefinedVariable
+
 from spiders.common_spider import CommonSpider
 from utils.common import SpiderHelper, SettingsHelper
 from scrapy.http.request.form import FormRequest
 from cssselect.parser import Selector
 from utils.item_helper import ItemHelper
-import re
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 class FQXSWSeaSpider(CommonSpider):
 

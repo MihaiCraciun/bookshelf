@@ -51,7 +51,7 @@ every_crawl_timedelta_mins = 3
 source_spider_sleep_secs = 60 * 10
 
 # config
-ingrone_spiders = set(['qdhome', 'zhhome', 'cshome', 'k17home'])
+sea_ingrone_spiders = set(['qdhome', 'zhhome', 'cshome', 'k17home'])
 source_home_spiders = {
                        'qd' : 'qdhome',
                        'zh' : 'zhhome',
@@ -66,7 +66,8 @@ search_spider_names = {
                         'k17home' : 'k17sea',
                         'lu5home' : 'lusea',
                         'bxwxhome' : 'bxwxsea',
-                        'ranwenhome' : 'ranwensea'
+                        'ranwenhome' : 'ranwensea',
+                        'fqxswhome' : 'fqxswsea'
                         }
 
 ####################################################

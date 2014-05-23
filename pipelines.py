@@ -9,11 +9,10 @@ sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 from utils import celery_call
 from utils.item_helper import ItemHelper
 from utils.conns_helper import MongoHelper, RedisHelper
-from utils.common import TimeHelper, RedisStrHelper, SettingsHelper
+from utils.common import TimeHelper, SettingsHelper
 from scrapy.exceptions import DropItem
 from items import Book, BookDesc, Sections, UpdateSiteBook
-from settings import unupdate_retry_queue, ingrone_spiders, \
-    user_favos_update_counts_key_prefix, search_spider_names
+from settings import sea_ingrone_spiders, user_favos_update_counts_key_prefix, search_spider_names
 import traceback
 from scrapy import log
 import datetime
@@ -56,7 +55,7 @@ class BookPipeline(object):
                     ##########################################################
 #                     # this book must be searched in other update sites.
 #                     for sea in search_spider_queues:
-#                         if not sea in ingrone_spiders:
+#                         if not sea in sea_ingrone_spiders:
 #                             rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
 #                     # push current home link to its home spider queue, then the home spider will take the responsibility.
 #                     rconn.rpush(spider_redis_queues[item['source_home_spider']], RedisStrHelper.contact(_id, source))
@@ -64,7 +63,7 @@ class BookPipeline(object):
 
                     # this book must be searched in other update sites.
                     for sea in search_spider_names:
-                        if not sea in ingrone_spiders:
+                        if not sea in sea_ingrone_spiders:
                             celery_call.call(search_spider_names[sea], b_id=_id, b_name=item['name'], b_author=item['author'])
                     # push current home link to its home spider queue, then the home spider will take the responsibility.
                     celery_call.call(item['source_home_spider'], b_id=_id, src=source)
@@ -73,7 +72,7 @@ class BookPipeline(object):
                     book_homes = book['homes']
                     ###########################################################
 #                     for home_spider_name in search_spider_queues:
-#                         if not home_spider_name in ingrone_spiders and (not home_spider_name in book_homes):  # if this book has some update sites not crawled yet, search it.
+#                         if not home_spider_name in sea_ingrone_spiders and (not home_spider_name in book_homes):  # if this book has some update sites not crawled yet, search it.
 #                             rconn.rpush(search_spider_queues[home_spider_name], RedisStrHelper.contact(_id, item['name']))
 #                         if home_spider_name in book_homes:  # get all home url to crawl.
 #                             home_url = book_homes[home_spider_name]
@@ -82,7 +81,7 @@ class BookPipeline(object):
                     ###########################################################
 
                     for home_spider_name in search_spider_names:
-                        if not home_spider_name in ingrone_spiders and (not home_spider_name in book_homes):  # if this book has some update sites not crawled yet, search it.
+                        if not home_spider_name in sea_ingrone_spiders and (not home_spider_name in book_homes):  # if this book has some update sites not crawled yet, search it.
                             celery_call.call(search_spider_names[home_spider_name], b_id=_id, b_name=item['name'], b_author=item['author'])
                         if home_spider_name in book_homes:  # get all home url to crawl.
                             home_url = book_homes[home_spider_name]
@@ -131,11 +130,7 @@ class SectionsPipeline(object):
                 # conn mongodb
                 mongo = MongoHelper.get_mongo()
                 db = mongo.bookshelf
-                book = db.books.find_one({'_id' : item['b_id']})
-                source = item['source']
-                is_source = False
-                if source == book['source']:
-                    is_source = True
+                is_source = item['is_source']
                 b_id = item['b_id']
                 source_short_name = item['source_short_name']
                 sec_docs = db.sections.find({'b_id' : b_id, 'source_short_name' : source_short_name}, {'url' : 1})
@@ -150,14 +145,14 @@ class SectionsPipeline(object):
                     sr_ks = sec_raws.keys()[::-1]
                     for sk in sr_ks:
                         if not sk in old_urls:
-                            sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, item['is_source'],
+                            sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, is_source,
                                                                          sec_raws[sk], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
                             i += 1
                         else:
                             break
                 else:
                     for sr in sec_raws:
-                        sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, item['is_source'],
+                        sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, is_source,
                                                                      sec_raws[sr], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
                         i += 1
                 if not sec_in_docs:

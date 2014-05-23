@@ -2,6 +2,7 @@ eclipse.preferences.version=1
 encoding//spiders/common_spider.py=utf-8
 encoding//spiders/home/bxwx_home.py=utf-8
 encoding//spiders/home/chuangshi_home.py=utf-8
+encoding//spiders/home/fqxsw_home.py=utf-8
 encoding//spiders/home/k17_home.py=utf-8
 encoding//spiders/home/lu5_home.py=utf-8
 encoding//spiders/home/qidian_home.py=utf-8
