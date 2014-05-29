@@ -105,3 +105,4 @@ class SettingsHelper():
     @staticmethod
     def get_book_no_home_url_val():
         return book_no_home_url_val
+

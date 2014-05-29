@@ -138,22 +138,22 @@ class SectionsPipeline(object):
                 sec_in_docs = []
                 n = datetime.datetime.now()
                 i = 0
+                sr_ks = sec_raws.keys()[::-1]
                 if sec_docs:
                     old_urls = set()
                     for sd in sec_docs:
                         old_urls.add(sd['url'])
-                    sr_ks = sec_raws.keys()[::-1]
                     for sk in sr_ks:
                         if not sk in old_urls:
                             sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, is_source,
-                                                                         sec_raws[sk], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
+                                                                         sec_raws[sk], TimeHelper.time_2_str(n - datetime.timedelta(seconds=i))))
                             i += 1
                         else:
                             break
                 else:
-                    for sr in sec_raws:
-                        sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sr, is_source,
-                                                                     sec_raws[sr], TimeHelper.time_2_str(n + datetime.timedelta(seconds=i))))
+                    for sk in sr_ks:
+                        sec_in_docs.append(ItemHelper.sections_2_doc(b_id, source_short_name, item['source_zh_name'], sk, is_source,
+                                                                     sec_raws[sk], TimeHelper.time_2_str(n - datetime.timedelta(seconds=i))))
                         i += 1
                 if not sec_in_docs:
                     pass
@@ -161,7 +161,7 @@ class SectionsPipeline(object):
 #                         rconn.hset(unupdate_retry_queue, RedisStrHelper.contact(b_id, source, item['spider']), TimeHelper.time_2_str())
                 else:
                     db.sections.insert(sec_in_docs)
-
+                    db.books.update({'_id' : b_id}, {'$set' : {"update_time" : TimeHelper.time_2_str(), "newest_sec" : sec_in_docs[0]['name']}})
                     user_favo_docs = db.user_favos.find({'b_ids' : b_id}, {'_id' : 1})
                     if user_favo_docs:  # push update count to users.
                         update_counts = len(sec_in_docs)

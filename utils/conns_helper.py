@@ -3,6 +3,7 @@
 # @author: binge
 
 import sys
+import traceback
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
@@ -25,129 +26,85 @@ class RedisHelper():
             del rconn
 
     @staticmethod
-    def get_info_from_home_queue(spider_name):
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            info = rconn.lpop(spider_redis_queues[spider_name])
-            crawling_key = crawling_key_prefix + info
-            if rconn.exists(crawling_key):
-                return None
-            rconn.setex(crawling_key, '1', crawling_key_expire)
-            return info, info.split(redis_sep)[1]
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def get_info_from_home_queue(spider_name, rconn=None):
+        info = rconn.lpop(spider_redis_queues[spider_name])
+        crawling_key = crawling_key_prefix + info
+        if rconn.exists(crawling_key):
+            return None
+        rconn.setex(crawling_key, '1', crawling_key_expire)
+        return info, info.split(redis_sep)[1]
 
     @staticmethod
-    def pop_home_crawl_info(spider_name):
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            return rconn.lpop(spider_redis_queues[spider_name])
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def pop_home_crawl_info(spider_name, rconn=None):
+        return rconn.lpop(spider_redis_queues[spider_name])
 
     @staticmethod
-    def get_last_crawl_time(spider_name):
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def get_last_crawl_time(spider_name, rconn=None):
         '''
             get spider(which named by parameter spider_name) the last crawled time.
         '''
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            return rconn.hget(last_crawl_time_key, spider_name)
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+        return rconn.hget(last_crawl_time_key, spider_name)
 
     @staticmethod
-    def set_next_crawl_time(spider_name, time):
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def set_next_crawl_time(spider_name, time, rconn=None):
         '''
             set spider(which named by parameter spider_name) the next crawl time.
         '''
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            rconn.hset(last_crawl_time_key, spider_name, time)
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+        rconn.hset(last_crawl_time_key, spider_name, time)
 
     @staticmethod
-    def set_crawling_home(crawl_info):
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def set_crawling_home(crawl_info, rconn=None):
         '''
             set crawling home page and expire it.
         '''
         crawling_key = crawling_key_prefix + crawl_info
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            rconn.setex(crawling_key, '1', crawling_key_expire)
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+        rconn.setex(crawling_key, '1', crawling_key_expire)
 
     @staticmethod
-    def exists_crawling_home(crawl_info):
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def exists_crawling_home(crawl_info, rconn=None):
         '''
             judge crawling home page is crawling or not.
         '''
         crawling_key = crawling_key_prefix + crawl_info
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            return rconn.exists(crawling_key)
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+        return rconn.exists(crawling_key)
 
     @staticmethod
-    def del_crawling_home(crawl_info):
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def del_crawling_home(crawl_info, rconn=None):
         '''
             delete crawling home page.
         '''
         crawling_key = crawling_key_prefix + crawl_info
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            rconn.delete(crawling_key)
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+        rconn.delete(crawling_key)
 
     @staticmethod
-    def set_celery_task_info(res_id, spider_name, status='PENGING', **kwargs):
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            rconn.hset(celery_task_info_key, res_id, RedisStrHelper.contact(status, spider_name, **kwargs))
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def set_celery_task_info(res_id, spider_name, status='PENGING', rconn=None, **kwargs):
+        rconn.hset(celery_task_info_key, res_id, RedisStrHelper.contact(status, spider_name, **kwargs))
 
     @staticmethod
-    def get_all_celery_tasks_info():
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            return rconn.hgetall(celery_task_info_key)
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def get_all_celery_tasks_info(rconn=None):
+        return rconn.hgetall(celery_task_info_key)
 
     @staticmethod
-    def update_celery_task_status(res_id, status):
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            val = rconn.hget(celery_task_info_key, res_id)
-            vs = RedisStrHelper.split(val)
-            vs[0] = status
-            rconn.hsetnx(celery_task_info_key, res_id, RedisStrHelper.contact(vs))
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def update_celery_task_status(res_id, status, rconn=None):
+        val = rconn.hget(celery_task_info_key, res_id)
+        vs = RedisStrHelper.split(val)
+        vs[0] = status
+        rconn.hsetnx(celery_task_info_key, res_id, RedisStrHelper.contact(vs))
 
     @staticmethod
-    def del_celery_task_status(res_id):
-        rconn = None
-        try:
-            rconn = RedisHelper.get_redis_conn()
-            rconn.hdel(celery_task_info_key, res_id)
-        finally:
-            RedisHelper.close_redis_conn(rconn)
+    @redis_exec(rconn = RedisHelper.get_redis_conn())
+    def del_celery_task_status(res_id, rconn=None):
+        rconn.hdel(celery_task_info_key, res_id)
 
 class MongoHelper():
 
@@ -160,4 +117,26 @@ class MongoHelper():
         if mongo:
             mongo.close()
 
+def redis_exec(redis):
+    def wrapper(fn):
+        def _exec():
+            try:
+                return fn(redis)
+            except:
+                raise Exception(traceback.format_exc())
+            finally:
+                RedisHelper.close_redis_conn(redis)
+        return _exec
+    return wrapper
 
+def mongo_exec(mongo):
+    def wrapper(fn):
+        def _exec():
+            try:
+                return fn(mongo)
+            except:
+                raise Exception(traceback.format_exc())
+            finally:
+                MongoHelper.close_mongo(mongo)
+        return _exec
+    return wrapper
