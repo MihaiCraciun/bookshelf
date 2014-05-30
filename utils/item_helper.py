@@ -11,7 +11,7 @@ from items import Book, BookDesc, Sections, UpdateSiteBook
 class ItemHelper():
 
     @staticmethod
-    def gene_book_item(name, source, author, source_name, home_spider):
+    def gene_book_item(name, source, author, source_name, home_spider, source_short_name):
         item = Book()
         item['name'] = name
         item['source'] = source
@@ -19,6 +19,7 @@ class ItemHelper():
         item['author'] = author
         item['homes'] = {home_spider : source}
         item['source_home_spider'] = home_spider
+        item['source_short_name'] = source_short_name
         return item
 
     @staticmethod

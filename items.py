@@ -19,6 +19,7 @@ class Book(Item):
     author = Field()  # author
     homes = Field()  # first site and update site home page of book, is a dict, key: spider name
     source_home_spider = Field()  # this spider name for first site home page of book
+    source_short_name = Field()
 
 class BookDesc(Item):
     _id = Field()  # id

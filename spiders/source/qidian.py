@@ -39,6 +39,7 @@ class QDSpider(CommonSpider):
         self.gene_next_crawl_time = lambda (t) : (str(t.year) + '-' + str(t.month) + '-' + str(t.day) + ' ' + t.strftime('%X'))
         next_crawl_time = self.gene_next_crawl_time(now - datetime.timedelta(minutes=SpiderHelper.get_every_crawl_timedelta_mins()))
         RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
+        self.source_short_name = 'qd'
 
     def parse(self, response):
         is_continue = True
@@ -56,7 +57,7 @@ class QDSpider(CommonSpider):
                     name = bn.xpath('div[@class="swb"]/span[@class="swbt"]/a/child::text()').extract()[0]  # book name
                     author = bn.xpath('div[@class="swd"]/a/child::text()').extract()[0]
 
-                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
+                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider, self.source_short_name)
                 else:
                     is_continue = False  # if the section publish time is less than last crawl time, can't continue.
                     break

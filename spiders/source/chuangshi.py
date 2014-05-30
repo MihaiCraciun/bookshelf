@@ -36,6 +36,7 @@ class CSSpider(CommonSpider):
         next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
         RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
         self.year = str(datetime.datetime.now().year)
+        self.source_short_name = 'cs'
 
     def parse(self, response):
         is_continue = True
@@ -57,7 +58,7 @@ class CSSpider(CommonSpider):
                     source = self.domain + n_c_nodes[0].xpath('@href').extract()[0]
                     author = bn.xpath('td[last() - 1]/a/child::text()').extract()[0]
 
-                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
+                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider, self.source_short_name)
                 else:
                     is_continue = False
                     break

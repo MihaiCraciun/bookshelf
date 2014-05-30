@@ -33,6 +33,7 @@ class ZHSpier(CommonSpider):
             self.last_crawl_time = last_crawl_time_str
         next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
         RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
+        self.source_short_name = 'zh'
 
     def parse(self, response):
         is_continue = True
@@ -49,7 +50,7 @@ class ZHSpier(CommonSpider):
                     source = n_c_nodes[0].xpath('@href').extract()[0]
                     author = bn.xpath('span[@class="author"]/a/@title').extract()[0]
 
-                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
+                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider, self.source_short_name)
                 else:
                     is_continue = False
                     break

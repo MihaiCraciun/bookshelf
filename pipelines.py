@@ -50,6 +50,7 @@ class BookPipeline(object):
                     b['source_name'] = item['source_name']
                     b['author'] = item['author']
                     b['homes'] = item['homes']
+                    b['source_short_name'] = item['source_short_name']
                     db.books.insert(b)  # insert it to mongodb
 
                     ##########################################################

@@ -34,6 +34,7 @@ class K17Spiser(CommonSpider):
             self.last_crawl_time = last_crawl_time_str
         next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
         RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
+        self.source_short_name = 'k17'
 
     def parse(self, response):
         is_continue = True
@@ -50,7 +51,7 @@ class K17Spiser(CommonSpider):
                     name = bn.xpath('td[@class="td3"]//a/child::text()').extract()[0]  # book name
                     author = bn.xpath('td[@class="td6"]/a/child::text()').extract()[0]
 
-                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider)
+                    yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider, self.source_short_name)
                 else:
                     is_continue = False  # if the section publish time is less than last crawl time, can't continue.
                     break
