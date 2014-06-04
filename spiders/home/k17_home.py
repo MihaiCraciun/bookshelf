@@ -30,7 +30,7 @@ class K17HomeSpider(CommonSpider):
     def parse(self, response):
         url = response._get_url()
         hxs = Selector(response)
-        desc = base64.encodestring(hxs.xpath('//font[@itemprop="description"]/child::text()').extract()[0])
+        desc = base64.encodestring(hxs.xpath('//font[@itemprop="description"]//child::text()').extract()[0])
         yield ItemHelper.gene_book_desc_item(self._id, desc)
 
         source_book_id = re.search(self.source_book_id_reg, url).group(1)
