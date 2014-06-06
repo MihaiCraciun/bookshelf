@@ -163,11 +163,12 @@ class SectionsPipeline(object):
                 else:
                     db.sections.insert(sec_in_docs)
                     db.books.update({'_id' : b_id}, {'$set' : {"update_time" : TimeHelper.time_2_str(), "newest_sec" : sec_in_docs[0]['name']}})
-                    user_favo_docs = db.user_favos.find({'b_ids' : b_id}, {'_id' : 1})
-                    if user_favo_docs:  # push update count to users.
-                        update_counts = len(sec_in_docs)
-                        for ufd in user_favo_docs:
-                            rconn.hincrby(user_favos_update_counts_key_prefix + ufd['_id'], b_id, update_counts)
+                    if is_source:
+                        user_favo_docs = db.user_favos.find({'b_ids' : b_id}, {'_id' : 1})
+                        if user_favo_docs:  # push update count to users.
+                            update_counts = len(sec_in_docs)
+                            for ufd in user_favo_docs:
+                                rconn.hincrby(user_favos_update_counts_key_prefix + ufd['_id'], b_id, update_counts)
 
 #                 RedisHelper.del_crawling_home(RedisStrHelper.contact(b_id, source))
             except:
