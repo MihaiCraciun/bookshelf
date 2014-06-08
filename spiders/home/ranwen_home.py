@@ -2,9 +2,6 @@
 # Created on 2014-5-22
 # @author: binge
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
 from spiders.common_spider import CommonSpider
 from scrapy.http.request import Request
@@ -15,7 +12,7 @@ from utils.item_helper import ItemHelper
 
 class RANWENHomeSpider(CommonSpider):
 
-    name = 'lu5home'
+    name = 'ranwenhome'
 
     def __init__(self, **kwargs):
         self.start_urls = [kwargs['src']]

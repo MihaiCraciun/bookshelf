@@ -3,6 +3,8 @@
 # @author: binge
 
 import sys
+from scrapy.http.response.text import TextResponse
+import traceback
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
@@ -20,9 +22,9 @@ class ZHSpier(CommonSpider):
 
     def __init__(self, **kwargs):
         self.start_urls = [
-                           'http://book.zongheng.com/store/c0/c0/b9/u0/p1/v9/s9/t0/ALL.html'
+                           'http://book.zongheng.com/store/c0/c0/b0/u0/p1/v9/s9/t0/ALL.html'
                            ]
-        self.next_page_pattern = 'http://book.zongheng.com/store/c0/c0/b9/u0/p%d/v9/s9/t0/ALL.html'
+        self.next_page_pattern = 'http://book.zongheng.com/store/c0/c0/b0/u0/p%d/v9/s9/t0/ALL.html'
         self.source_name = u'纵横中文网'
         self.domain = 'http://www.zongheng.com'
         self.home_spider = SpiderHelper.get_source_home_spider(self.name)
@@ -43,7 +45,11 @@ class ZHSpier(CommonSpider):
             is_continue = False
         else:
             for bn in book_nodes:
-                u_t = bn.xpath('span[@class="time"]/@title').extract()[0]
+                try:
+                    u_t = bn.xpath('span[@class="time"]/@title').extract()[0]
+                except:
+                    self.log('may be broken pipe, continue.', level=log.ERROR)
+                    continue
                 if u_t >= self.last_crawl_time:
                     n_c_nodes = bn.xpath('span[@class="chap"]/a')  # book name
                     name = n_c_nodes[0].xpath('@title').extract()[0]
@@ -66,6 +72,6 @@ class ZHSpier(CommonSpider):
             self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
             next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
             RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
-#             SpiderHelper.source_spider_sleep()
-#             yield Request(self.start_urls[0], callback=self.parse)
+            SpiderHelper.source_spider_sleep()
+            yield Request(self.start_urls[0], callback=self.parse)
 

@@ -2,17 +2,16 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-from utils import celery_call
 from utils.item_helper import ItemHelper
 from utils.conns_helper import MongoHelper, RedisHelper
-from utils.common import TimeHelper, SettingsHelper
+from utils.common import TimeHelper, RedisStrHelper
 from scrapy.exceptions import DropItem
 from items import Book, BookDesc, Sections, UpdateSiteBook
-from settings import sea_ingrone_spiders, user_favos_update_counts_key_prefix, search_spider_names
+from settings import sea_ingrone_spiders, user_favos_update_counts_key_prefix, \
+    spider_redis_queues, book_no_home_url_val,\
+    search_spider_names, \
+    update_site_spider_info_queue, search_spider_info_queue
 import traceback
 from scrapy import log
 import datetime
@@ -51,43 +50,35 @@ class BookPipeline(object):
                     b['author'] = item['author']
                     b['homes'] = item['homes']
                     b['source_short_name'] = item['source_short_name']
+                    b['update_time']  = TimeHelper.time_2_str()
                     db.books.insert(b)  # insert it to mongodb
 
                     ##########################################################
-#                     # this book must be searched in other update sites.
-#                     for sea in search_spider_queues:
-#                         if not sea in sea_ingrone_spiders:
-#                             rconn.rpush(search_spider_queues[sea], RedisStrHelper.contact(_id, item['name']))
-#                     # push current home link to its home spider queue, then the home spider will take the responsibility.
-#                     rconn.rpush(spider_redis_queues[item['source_home_spider']], RedisStrHelper.contact(_id, source))
-                    ##########################################################
-
                     # this book must be searched in other update sites.
                     for sea in search_spider_names:
                         if not sea in sea_ingrone_spiders:
-                            celery_call.call(search_spider_names[sea], b_id=_id, b_name=item['name'], b_author=item['author'])
+                            rconn.rpush(search_spider_info_queue, {'spider_name' : search_spider_names[sea], 'b_id' : _id, 'b_name' : item['name'], 'b_author' : item['author']})
                     # push current home link to its home spider queue, then the home spider will take the responsibility.
-                    celery_call.call(item['source_home_spider'], b_id=_id, src=source)
+                    rconn.rpush(spider_redis_queues[item['source_home_spider']], RedisStrHelper.contact(_id, source))
+                    ##########################################################
 
                 else:  # this book has been crawled once or more.
                     book_homes = book['homes']
                     ###########################################################
-#                     for home_spider_name in search_spider_queues:
-#                         if not home_spider_name in sea_ingrone_spiders and (not home_spider_name in book_homes):  # if this book has some update sites not crawled yet, search it.
-#                             rconn.rpush(search_spider_queues[home_spider_name], RedisStrHelper.contact(_id, item['name']))
-#                         if home_spider_name in book_homes:  # get all home url to crawl.
-#                             home_url = book_homes[home_spider_name]
-#                             if home_url:
-#                                 rconn.rpush(spider_redis_queues[home_spider_name], RedisStrHelper.contact(_id, home_url))
-                    ###########################################################
-
                     for home_spider_name in search_spider_names:
                         if not home_spider_name in sea_ingrone_spiders and (not home_spider_name in book_homes):  # if this book has some update sites not crawled yet, search it.
-                            celery_call.call(search_spider_names[home_spider_name], b_id=_id, b_name=item['name'], b_author=item['author'])
+                            rconn.rpush(search_spider_info_queue, {'spider_name' : search_spider_names[home_spider_name], 'b_id' : _id, 'b_name' : item['name'], 'b_author' : item['author']})
+                            continue
                         if home_spider_name in book_homes:  # get all home url to crawl.
                             home_url = book_homes[home_spider_name]
-                            if not home_url == SettingsHelper.get_book_no_home_url_val():
-                                celery_call.call(home_spider_name, b_id=_id, src=home_url)
+                            if home_url and not home_url == book_no_home_url_val:
+                                if not home_spider_name in sea_ingrone_spiders:
+                                    update_site_spider_info_queue
+                                    rconn.rpush(update_site_spider_info_queue, {'spider_name' : home_spider_name, 'b_id' : _id, 'src' : home_url})
+                                else:
+                                    rconn.rpush(spider_redis_queues[home_spider_name], RedisStrHelper.contact(_id, home_url))
+                                    
+                    ###########################################################
 
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
@@ -184,7 +175,9 @@ class UpdateSiteBookPipeline(object):
             return item
         else:
             mongo = None
+            rconn = None
             try:
+                rconn = RedisHelper.get_redis_conn()
                 # conn mongodb
                 mongo = MongoHelper.get_mongo()
                 db = mongo.bookshelf
@@ -192,11 +185,12 @@ class UpdateSiteBookPipeline(object):
                 _id = item['_id']
                 home_url = item['home_url']
                 db.books.update({"_id" : _id}, {'$set' : {"homes." + home_spider_name : home_url}})
-                celery_call.call(home_spider_name, b_id=_id, src=home_url)
+                rconn.rpush(update_site_spider_info_queue, {'spider_name' : home_spider_name, 'b_id' : _id, 'src' : home_url})
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:
                 MongoHelper.close_mongo(mongo)
+                RedisHelper.close_redis_conn(rconn)
 
 class DropPipeline(object):
     '''

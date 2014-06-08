@@ -2,11 +2,7 @@
 # Created on 2014-5-23
 # @author: binge
 
-import sys
 import re
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
-
 from spiders.common_spider import CommonSpider
 from utils.common import SpiderHelper, SettingsHelper
 from scrapy.http.request.form import FormRequest
@@ -27,7 +23,7 @@ class FQXSWSeaSpider(CommonSpider):
         self.home_spider = SpiderHelper.get_sea_result_home_spider(self.name)
 
     def start_requests(self):
-        return [FormRequest(url=self.sea_url, form_date={
+        return [FormRequest(url=self.sea_url, formdata={
                      'searchkey' : self.kw
                      }, callback=self.parse_result)]
 

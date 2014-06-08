@@ -3,25 +3,22 @@
 # @author: binge
 
 import sys
-from utils.celery_call import call
+import threading
 reload(sys)
 sys.setdefaultencoding('utf-8')  # @UndefinedVariable
 
-import os
-# sys.path.insert(0, os.path.dirname(os.path.split(os.path.realpath(__file__))[0]))
+from utils import spider_caller
 from settings import source_home_spiders
 
-def run_worker():
-    celery_exe = "d:\\soft\\Python27\\Scripts\\celery.exe"
-    os.popen(celery_exe + ' worker --app=utils.celeryapp:app -l info -f ./log/celery.log &')
-    print "Wordker started."
 
 def start():
-#     run_worker()
-#     call('qd')
-#     call('qdhome', src='http://www.qidian.com/Book/147919.aspx', b_id='2acf3455598bc4839218e8035e8ccf3a')
-    for sn in source_home_spiders:
-        call(sn)
+#     for sn in source_home_spiders:
+#         spider_caller.call(sn)
+#         spider_caller.call(source_home_spiders['sn'])
+    threading.Thread(target=spider_caller.call, kwargs={'spider_name': 'cs'}).start()
+#     threading.Thread(target=spider_caller.call, kwargs={'spider_name': 'k17home'}).start()
+    while 1:
+        pass
 
 if __name__ == '__main__':
     start()

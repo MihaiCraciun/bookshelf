@@ -2,16 +2,13 @@
 # Created on 2014-5-21
 # @author: binge
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
-
-
 from scrapy.utils.project import get_project_settings
 from scrapy.crawler import Crawler
 from twisted.internet import reactor
 from scrapy import log, signals
 from scrapy.xlib.pydispatch import dispatcher
+import os
+import threading
 
 class SpiderCaller(object):
 
@@ -33,5 +30,14 @@ class SpiderCaller(object):
         ###
         log.msg('spider %s Stop reactor...' % self.spider_name)
 
-if __name__ == '__main__':
-    SpiderCaller().run('qd')
+
+def call(spider_name, **spider_kwargs):
+    args = ''
+    if spider_kwargs:
+        for k in spider_kwargs:
+            args += '-a %s=%s ' % (k, str(spider_kwargs[k]))
+    cmd = 'scrapy crawl %s %s'  % (spider_name, args)
+#     threading.Thread(target=os.popen, kwargs={'command' : 'scrapy crawl %s %s'  % (spider_name, args)})
+    print 'spider %s with args: %s will start.' % (spider_name, args)
+    os.popen(cmd)
+

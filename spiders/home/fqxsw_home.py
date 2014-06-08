@@ -2,10 +2,6 @@
 # Created on 2014-5-23
 # @author: binge
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
-
 from scrapy.selector import Selector
 from collections import OrderedDict
 from utils.item_helper import ItemHelper

@@ -2,10 +2,6 @@
 # Created on 2014-5-22
 # @author: binge
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
-
 from scrapy.selector import Selector
 from scrapy import log
 from utils.item_helper import ItemHelper
@@ -39,7 +35,7 @@ class K17Spiser(CommonSpider):
     def parse(self, response):
         is_continue = True
         hxs = Selector(response)
-        book_nodes = hxs.xpath('//div[@class="alltable"]//tr[positions() > 2]')
+        book_nodes = hxs.xpath('//div[@class="alltable"]//tr[position() > 2]')
         if not book_nodes:
             self.log(message='%s spider get nothing in home page, current url is %s' % (self.name, response._get_url()), level=log.WARNING)
             is_continue = False
@@ -65,7 +61,7 @@ class K17Spiser(CommonSpider):
         else:
             self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
             self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
-            next_crawl_time = self.gene_next_crawl_time(datetime.datetime.now() - datetime.timedelta(minutes=SpiderHelper.get_every_crawl_timedelta_mins()))
+            next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
             RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
-#             SpiderHelper.source_spider_sleep()
-#             yield Request(self.start_urls[0], callback=self.parse)
+            SpiderHelper.source_spider_sleep()
+            yield Request(self.start_urls[0], callback=self.parse)

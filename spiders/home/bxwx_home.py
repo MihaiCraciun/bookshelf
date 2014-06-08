@@ -2,10 +2,6 @@
 # Created on 2014-5-22
 # @author: binge
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
-
 from spiders.common_spider import CommonSpider
 from scrapy.http.request import Request
 from scrapy.selector import Selector

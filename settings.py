@@ -69,7 +69,8 @@ search_spider_names = {
                         'ranwenhome' : 'ranwensea',
                         'fqxswhome' : 'fqxswsea'
                         }
-
+search_spider_info_queue = '__sea_spider_info_queue_'
+update_site_spider_info_queue = '__update_site_spider_info'
 ####################################################
 spider_redis_queues = {
                        'qdhome' : '__qidian_home_queue',
@@ -77,11 +78,7 @@ spider_redis_queues = {
                        'cshome' : '__chuangshi_home_queue',
                        'k17home' : '__k17_home_queue'
                        }
-search_spider_queues = {
-                        'qdhome' : '__qd_sea_queue',
-                        'zhhome' : '__zh_sea_queue',
-                        'k17home' : '__k17_sea_queue'
-                        }
+
 
 book_no_home_url_val = 'NONE'
 
@@ -93,9 +90,9 @@ celery_task_info_key = '__celery_task_info'
 
 user_favos_update_counts_key_prefix = '__user_favos_update_counts_'
 
-mongo_host = '127.0.0.1'
+mongo_host = '191.101.3.59'
 mongo_port = 27017
-redis_host = '127.0.0.1'
+redis_host = '191.101.3.59'
 redis_port = 6379
 redis_def_db = 0
 redis_sep = ':::'

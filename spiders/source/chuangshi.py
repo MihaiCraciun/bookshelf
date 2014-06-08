@@ -52,6 +52,7 @@ class CSSpider(CommonSpider):
         else:
             for bn in book_nodes:
                 u_t = self.year[:2] + bn.xpath('td[last()]/span/child::text()').extract()[0].strip() + ":00"
+                self.log(u_t)
                 if u_t >= self.last_crawl_time:
                     n_c_nodes = bn.xpath('td[position() = 3]/a')  # book name
                     name = n_c_nodes[0].xpath('child::text()').extract()[0].strip()
@@ -68,9 +69,9 @@ class CSSpider(CommonSpider):
             yield Request(next_page, callback=self.parse)
         else:
             self.log(message='%s spider sleep wait for next round.' % self.name, level=log.INFO)
-#             self.curr_page_id = 1
+            self.curr_page_id = 1
             self.last_crawl_time = RedisHelper.get_last_crawl_time(self.name)
             next_crawl_time = TimeHelper.time_2_str(delta= -SpiderHelper.get_every_crawl_timedelta_mins(), delta_unit='minutes')
             RedisHelper.set_next_crawl_time(self.name, next_crawl_time)
-#             SpiderHelper.source_spider_sleep()
-#             yield Request(self.start_urls[0], callback=self.parse)
+            SpiderHelper.source_spider_sleep()
+            yield Request(self.start_urls[0], callback=self.parse)

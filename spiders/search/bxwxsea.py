@@ -2,10 +2,6 @@
 # Created on 2014-5-22
 # @author: binge
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
-
 from spiders.common_spider import CommonSpider
 from utils.common import SpiderHelper, SettingsHelper
 from utils.item_helper import ItemHelper
@@ -25,7 +21,7 @@ class BXWXSeaSpider(CommonSpider):
         self.home_spider = SpiderHelper.get_sea_result_home_spider(self.name)
 
     def start_requests(self):
-        return [FormRequest(url=self.sea_url, form_date={
+        return [FormRequest(url=self.sea_url, formdata={
                      'searchtype' : 'articlename',
                      'searchkey' : self.kw
                      }, callback=self.parse_result)]
