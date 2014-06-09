@@ -21,9 +21,9 @@ class CSSpider(CommonSpider):
 
     def __init__(self, **kwargs):
         self.start_urls = [
-                           'http://chuangshi.qq.com/read/ajax/Novels.html?pageIndex=1&Website=&Subjectid=&Contentid=&Bookwords=all&Updatestatus=all&Lastupdate=all&Sortby=all&Isvip=all&TitlePinyin=all&TagList=all'
+                           'http://chuangshi.qq.com/search/getSearchNovels.html?pageIndex=1&Website=&Subjectid=&Contentid=&Bookwords=all&Updatestatus=all&Lastupdate=all&Sortby=all&Isvip=all&TitlePinyin=all&TagList=all'
                            ]
-        self.next_page_pattern = 'http://chuangshi.qq.com/read/ajax/Novels.html?pageIndex=%d&Website=&Subjectid=&Contentid=&Bookwords=all&Updatestatus=all&Lastupdate=all&Sortby=all&Isvip=all&TitlePinyin=all&TagList=all'
+        self.next_page_pattern = 'http://chuangshi.qq.com/search/getSearchNovels.html?pageIndex=%d&Website=&Subjectid=&Contentid=&Bookwords=all&Updatestatus=all&Lastupdate=all&Sortby=all&Isvip=all&TitlePinyin=all&TagList=all'
         self.source_name = u'创世中文网'
         self.domain = 'http://chuangshi.qq.com'
         self.home_spider = SpiderHelper.get_source_home_spider(self.name)
@@ -44,7 +44,7 @@ class CSSpider(CommonSpider):
             replace('''"ListHTMl":"''', """"ListHTMl":'""").\
             replace('''<\/div>"}''', '''<\/div>'}''').\
             replace('\\', '')  # 1. change unicode to normal string, 2. format content.
-        body_dict = eval(body)  # transfer body to a dict, contain too key: PageCount and ListHTMl.
+        body_dict = eval(body)  # transfer body to a dict, contain two key: PageCount and ListHTMl.
         hxs = Selector(text=body_dict['ListHTMl'])
         book_nodes = hxs.xpath('//table/tr[position() > 1]')
         if not book_nodes:

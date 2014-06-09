@@ -90,9 +90,9 @@ celery_task_info_key = '__celery_task_info'
 
 user_favos_update_counts_key_prefix = '__user_favos_update_counts_'
 
-mongo_host = '191.101.3.59'
+mongo_host = '127.0.0.1'
 mongo_port = 27017
-redis_host = '191.101.3.59'
+redis_host = '127.0.0.1'
 redis_port = 6379
 redis_def_db = 0
 redis_sep = ':::'
