@@ -5,16 +5,18 @@
 
 from utils.item_helper import ItemHelper
 from utils.conns_helper import MongoHelper, RedisHelper
-from utils.common import TimeHelper, RedisStrHelper
+from utils.common import TimeHelper, RedisStrHelper, SettingsHelper
 from scrapy.exceptions import DropItem
 from items import Book, BookDesc, Sections, UpdateSiteBook
 from settings import sea_ingrone_spiders, user_favos_update_counts_key_prefix, \
     spider_redis_queues, book_no_home_url_val,\
     search_spider_names, \
-    update_site_spider_info_queue, search_spider_info_queue
+    update_site_spider_info_queue, search_spider_info_queue,\
+    monitor_main_spider_queue
 import traceback
-from scrapy import log
+from scrapy import log, signals
 import datetime
+from scrapy.xlib.pydispatch import dispatcher
 # import md5
 try:
     from hashlib import md5
@@ -25,6 +27,13 @@ class BookPipeline(object):
     '''
     exec book item.
     '''
+
+    def __init__(self):
+        dispatcher.connect(self.spider_opened, signals.spider_opened)
+        dispatcher.connect(self.spider_closed, signals.spider_closed)
+
+    def close_spider(self, spider):
+        RedisHelper.get_redis_conn().srem(monitor_main_spider_queue, spider.name)
 
     def process_item(self, item, spider):
         if not item.__class__ is Book:
@@ -57,7 +66,7 @@ class BookPipeline(object):
                     # this book must be searched in other update sites.
                     for sea in search_spider_names:
                         if not sea in sea_ingrone_spiders:
-                            rconn.rpush(search_spider_info_queue, {'spider_name' : search_spider_names[sea], 'b_id' : _id, 'b_name' : item['name'], 'b_author' : item['author']})
+                            rconn.sadd(search_spider_info_queue, {'spider_name' : search_spider_names[sea], 'b_id' : _id, 'b_name' : item['name'], 'b_author' : item['author']})
                     # push current home link to its home spider queue, then the home spider will take the responsibility.
                     rconn.rpush(spider_redis_queues[item['source_home_spider']], RedisStrHelper.contact(_id, source))
                     ##########################################################
@@ -67,17 +76,16 @@ class BookPipeline(object):
                     ###########################################################
                     for home_spider_name in search_spider_names:
                         if not home_spider_name in sea_ingrone_spiders and (not home_spider_name in book_homes):  # if this book has some update sites not crawled yet, search it.
-                            rconn.rpush(search_spider_info_queue, {'spider_name' : search_spider_names[home_spider_name], 'b_id' : _id, 'b_name' : item['name'], 'b_author' : item['author']})
+                            rconn.sadd(search_spider_info_queue, {'spider_name' : search_spider_names[home_spider_name], 'b_id' : _id, 'b_name' : item['name'], 'b_author' : item['author']})
                             continue
                         if home_spider_name in book_homes:  # get all home url to crawl.
                             home_url = book_homes[home_spider_name]
                             if home_url and not home_url == book_no_home_url_val:
                                 if not home_spider_name in sea_ingrone_spiders:
-                                    update_site_spider_info_queue
-                                    rconn.rpush(update_site_spider_info_queue, {'spider_name' : home_spider_name, 'b_id' : _id, 'src' : home_url})
+                                    rconn.sadd(update_site_spider_info_queue, {'spider_name' : home_spider_name, 'b_id' : _id, 'src' : home_url})
                                 else:
                                     rconn.rpush(spider_redis_queues[home_spider_name], RedisStrHelper.contact(_id, home_url))
-                                    
+
                     ###########################################################
 
             except:
@@ -185,7 +193,8 @@ class UpdateSiteBookPipeline(object):
                 _id = item['_id']
                 home_url = item['home_url']
                 db.books.update({"_id" : _id}, {'$set' : {"homes." + home_spider_name : home_url}})
-                rconn.rpush(update_site_spider_info_queue, {'spider_name' : home_spider_name, 'b_id' : _id, 'src' : home_url})
+                if not home_url == SettingsHelper.get_book_no_home_url_val():
+                    rconn.add(update_site_spider_info_queue, {'spider_name' : home_spider_name, 'b_id' : _id, 'src' : home_url})
             except:
                 log.msg(message=traceback.format_exc(), _level=log.ERROR)
             finally:

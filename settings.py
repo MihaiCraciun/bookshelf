@@ -88,6 +88,8 @@ crawling_key_expire = 3 * 60  # this must less than source_spider_sleep
 last_crawl_time_key = '__last_crawl_time'
 celery_task_info_key = '__celery_task_info'
 
+monitor_main_spider_queue = '__monitor_main_spider_queue'
+
 user_favos_update_counts_key_prefix = '__user_favos_update_counts_'
 
 mongo_host = '127.0.0.1'
