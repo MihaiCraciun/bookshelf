@@ -53,7 +53,7 @@ class CSSpider(CommonSpider):
                 if u_t >= self.last_crawl_time:
                     n_c_nodes = bn.xpath('td[position() = 3]/a')  # book name
                     name = n_c_nodes[0].xpath('child::text()').extract()[0].strip()
-                    source = self.domain + n_c_nodes[0].xpath('@href').extract()[0]
+                    source = n_c_nodes[0].xpath('@href').extract()[0]
                     author = bn.xpath('td[last() - 1]/a/child::text()').extract()[0]
 
                     yield ItemHelper.gene_book_item(name, source, author, self.source_name, self.home_spider, self.source_short_name)
