@@ -64,7 +64,7 @@ search_spider_names = {
                         'zhhome' : 'zhsea',
                         'cshome' : 'cssea',
                         'k17home' : 'k17sea',
-                        'lu5home' : 'lusea',
+                        'lu5home' : 'lu5sea',
                         'bxwxhome' : 'bxwxsea',
                         'ranwenhome' : 'ranwensea',
                         'fqxswhome' : 'fqxswsea'
