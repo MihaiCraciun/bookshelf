@@ -23,7 +23,7 @@ def start():
         threading.Thread(target=spider_caller.call, kwargs={'spider_name': sn}).start()
         main_spiders.add(sn)
         rconn.sadd(monitor_main_spider_queue, sn)
-        threading.Thread(target=spider_caller.call, kwargs={'spider_name': source_home_spiders['sn']}).start()
+        threading.Thread(target=spider_caller.call, kwargs={'spider_name': source_home_spiders[sn]}).start()
         main_spiders.add(source_home_spiders['sn'])
         rconn.sadd(monitor_main_spider_queue, source_home_spiders['sn'])
     while 1:

@@ -2,10 +2,6 @@
 # Created on 2014-5-13
 # @author: binge
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')  # @UndefinedVariable
-
 import datetime
 from scrapy import log
 from spiders.common_spider import CommonSpider
@@ -42,7 +38,9 @@ class CSSpider(CommonSpider):
         is_continue = True
         body = eval('u' + '"""' + response._get_body() + '"""').\
             replace('''"ListHTMl":"''', """"ListHTMl":'""").\
-            replace('''<\/div>"}''', '''<\/div>'}''').\
+            replace('''<\/table>"}''', '''<\/table>'}''').\
+            replace('''\r''', '''''').\
+            replace('''\n''', '''''').\
             replace('\\', '')  # 1. change unicode to normal string, 2. format content.
         body_dict = eval(body)  # transfer body to a dict, contain two key: PageCount and ListHTMl.
         hxs = Selector(text=body_dict['ListHTMl'])
@@ -52,7 +50,6 @@ class CSSpider(CommonSpider):
         else:
             for bn in book_nodes:
                 u_t = self.year[:2] + bn.xpath('td[last()]/span/child::text()').extract()[0].strip() + ":00"
-                self.log(u_t)
                 if u_t >= self.last_crawl_time:
                     n_c_nodes = bn.xpath('td[position() = 3]/a')  # book name
                     name = n_c_nodes[0].xpath('child::text()').extract()[0].strip()

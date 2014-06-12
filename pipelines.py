@@ -29,10 +29,10 @@ class BookPipeline(object):
     '''
 
     def __init__(self):
-        dispatcher.connect(self.spider_opened, signals.spider_opened)
+#         dispatcher.connect(self.spider_opened, signals.spider_opened)
         dispatcher.connect(self.spider_closed, signals.spider_closed)
 
-    def close_spider(self, spider):
+    def spider_closed(self, spider):
         RedisHelper.get_redis_conn().srem(monitor_main_spider_queue, spider.name)
 
     def process_item(self, item, spider):
